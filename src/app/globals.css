@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+:root {
+  /* Warm, institutional registry palette - deliberately not the
+     generic cool-grey SaaS default. */
+  --color-paper: #f6f3ec;
+  --color-ink: #1c1b18;
+  --color-ink-soft: #57534a;
+  --color-green-deep: #143b2e;
+  --color-green-mid: #23503f;
+  --color-brass: #a9803e;
+  --color-brass-soft: #d9c49a;
+  --color-clay: #8a3324;
+  --color-line: #dad3c3;
+  --color-surface: #efebe0;
+}
+
+@theme inline {
+  --color-paper: var(--color-paper);
+  --color-ink: var(--color-ink);
+  --color-ink-soft: var(--color-ink-soft);
+  --color-green-deep: var(--color-green-deep);
+  --color-green-mid: var(--color-green-mid);
+  --color-brass: var(--color-brass);
+  --color-brass-soft: var(--color-brass-soft);
+  --color-clay: var(--color-clay);
+  --color-line: var(--color-line);
+  --color-surface: var(--color-surface);
+  /* System-stack fallbacks so the build works without internet access to
+     Google Fonts. On Vercel, swap these two lines for
+     `var(--font-fraunces)` / `var(--font-inter)` from next/font/google
+     (see layout.tsx) to get the exact intended webfonts. */
+  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter,
+    Helvetica, Arial, sans-serif;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brass);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
