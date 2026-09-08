@@ -1,4 +1,5 @@
 import { getCurrentUserContext } from "@/lib/auth";
+import { listStaff } from "@/lib/staff";
 import { ShieldAlert, Building2, Users2, ClipboardList } from "lucide-react";
 
 export default async function DashboardPage() {
@@ -25,6 +26,8 @@ export default async function DashboardPage() {
     );
   }
 
+  const staff = await listStaff();
+
   return (
     <div className="space-y-6">
       <div>
@@ -38,7 +41,7 @@ export default async function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryCard icon={Building2} label="Schools & Departments" value="—" />
-        <SummaryCard icon={Users2} label="Staff in Scope" value="—" />
+        <SummaryCard icon={Users2} label="Staff in Scope" value={String(staff.length)} />
         <SummaryCard icon={ClipboardList} label="Pending Approvals" value="—" />
         <SummaryCard icon={ShieldAlert} label="Alerts" value="—" />
       </div>
@@ -46,8 +49,9 @@ export default async function DashboardPage() {
       <div className="rounded-sm border border-[var(--color-line)] bg-[var(--color-surface)] p-6">
         <p className="text-sm text-[var(--color-ink-soft)]">
           Live figures arrive as each module (HR, Communication, Academic,
-          Examinations) is built — this shell renders your role-scoped
-          dashboard correctly today; the data behind these cards is next.
+          Examinations) is built — Staff in Scope is now real data pulled
+          through your role&apos;s RLS-scoped access; the rest come online
+          module by module.
         </p>
       </div>
     </div>
