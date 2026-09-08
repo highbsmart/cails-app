@@ -10,6 +10,7 @@ import {
   CalendarClock,
   BarChart3,
   Settings,
+  CalendarDays,
 } from "lucide-react";
 
 export type NavItem = {
@@ -27,22 +28,23 @@ export const NAV_ITEMS: NavItem[] = [
     label: "HR",
     labelAr: "الموارد البشرية",
     icon: Users,
-    requiresAnyRole: ["SYSTEM_ADMIN", "PROVOST", "DPP", "HOD", "DEAN"],
+    requiresAnyRole: ["SYSTEM_ADMIN", "PROVOST", "REGISTRAR", "DPREG_ESTABLISHMENT", "DPP", "HOD", "DEAN"],
   },
+  { href: "/leave", label: "My Leave", labelAr: "الإجازات", icon: CalendarDays },
   { href: "/communication", label: "Communication", labelAr: "التواصل", icon: MessagesSquare },
   {
     href: "/academic",
     label: "Academic",
     labelAr: "الشؤون الأكاديمية",
     icon: GraduationCap,
-    requiresAnyRole: ["SYSTEM_ADMIN", "PROVOST", "DPA", "DEAN", "HOD", "DIR_EXAMS"],
+    requiresAnyRole: ["SYSTEM_ADMIN", "PROVOST", "DPA", "REGISTRAR", "DPREG_ACADEMIC", "DEAN", "HOD", "DIR_EXAMS"],
   },
   {
     href: "/staff",
     label: "Staff",
     labelAr: "الموظفون",
     icon: IdCard,
-    requiresAnyRole: ["SYSTEM_ADMIN", "PROVOST", "DPA", "DPP", "DEAN", "HOD"],
+    requiresAnyRole: ["SYSTEM_ADMIN", "PROVOST", "REGISTRAR", "DPREG_ESTABLISHMENT", "DPA", "DPP", "DEAN", "HOD"],
   },
   {
     href: "/students",
