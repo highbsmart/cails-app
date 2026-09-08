@@ -1,73 +1,76 @@
-import {
-  LayoutDashboard,
-  Users,
-  MessagesSquare,
-  GraduationCap,
-  IdCard,
-  BookUser,
-  FileCheck2,
-  FolderOpen,
-  CalendarClock,
-  BarChart3,
-  Settings,
-  CalendarDays,
-} from "lucide-react";
+// Icon references are looked up by NAME in the (client) Sidebar component,
+// not imported/passed here as component functions - passing an actual
+// component reference as a prop from a Server Component to a Client
+// Component is not serializable and breaks the app. A string key is.
+export type IconName =
+  | "dashboard"
+  | "hr"
+  | "leave"
+  | "communication"
+  | "academic"
+  | "staff"
+  | "students"
+  | "examination"
+  | "documents"
+  | "meetings"
+  | "reports"
+  | "settings";
 
 export type NavItem = {
   href: string;
   label: string;
   labelAr: string;
-  icon: typeof LayoutDashboard;
+  icon: IconName;
   requiresAnyRole?: string[]; // if omitted, visible to everyone signed in
 };
 
 export const NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", labelAr: "لوحة التحكم", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Dashboard", labelAr: "لوحة التحكم", icon: "dashboard" },
   {
     href: "/hr",
     label: "HR",
     labelAr: "الموارد البشرية",
-    icon: Users,
+    icon: "hr",
     requiresAnyRole: ["SYSTEM_ADMIN", "PROVOST", "REGISTRAR", "DPREG_ESTABLISHMENT", "DPP", "HOD", "DEAN"],
   },
-  { href: "/leave", label: "My Leave", labelAr: "الإجازات", icon: CalendarDays },
-  { href: "/communication", label: "Communication", labelAr: "التواصل", icon: MessagesSquare },
+  { href: "/leave", label: "My Leave", labelAr: "الإجازات", icon: "leave" },
+  { href: "/communication", label: "Communication", labelAr: "التواصل", icon: "communication" },
   {
     href: "/academic",
     label: "Academic",
     labelAr: "الشؤون الأكاديمية",
-    icon: GraduationCap,
+    icon: "academic",
     requiresAnyRole: ["SYSTEM_ADMIN", "PROVOST", "DPA", "REGISTRAR", "DPREG_ACADEMIC", "DEAN", "HOD", "DIR_EXAMS"],
   },
   {
     href: "/staff",
     label: "Staff",
     labelAr: "الموظفون",
-    icon: IdCard,
+    icon: "staff",
     requiresAnyRole: ["SYSTEM_ADMIN", "PROVOST", "REGISTRAR", "DPREG_ESTABLISHMENT", "DPA", "DPP", "DEAN", "HOD"],
   },
   {
     href: "/students",
     label: "Students",
     labelAr: "الطلاب",
-    icon: BookUser,
+    icon: "students",
     requiresAnyRole: ["SYSTEM_ADMIN", "PROVOST", "DPA", "DEAN", "HOD", "DIR_EXAMS"],
   },
   {
     href: "/examination",
     label: "Examination",
     labelAr: "الامتحانات",
-    icon: FileCheck2,
+    icon: "examination",
     requiresAnyRole: ["SYSTEM_ADMIN", "DPA", "DIR_EXAMS", "DEAN", "HOD", "EXAMS_OFFICER", "ACADEMIC_STAFF"],
   },
-  { href: "/documents", label: "Documents", labelAr: "الوثائق", icon: FolderOpen },
-  { href: "/meetings", label: "Meetings", labelAr: "الاجتماعات", icon: CalendarClock },
-  { href: "/reports", label: "Reports", labelAr: "التقارير", icon: BarChart3 },
+  { href: "/documents", label: "Documents", labelAr: "الوثائق", icon: "documents" },
+  { href: "/meetings", label: "Meetings", labelAr: "الاجتماعات", icon: "meetings" },
+  { href: "/reports", label: "Reports", labelAr: "التقارير", icon: "reports" },
   {
     href: "/settings",
     label: "Settings",
     labelAr: "الإعدادات",
-    icon: Settings,
+    icon: "settings",
     requiresAnyRole: ["SYSTEM_ADMIN"],
   },
 ];

@@ -3,8 +3,40 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import {
+  LayoutDashboard,
+  Users,
+  MessagesSquare,
+  GraduationCap,
+  IdCard,
+  BookUser,
+  FileCheck2,
+  FolderOpen,
+  CalendarClock,
+  BarChart3,
+  Settings,
+  CalendarDays,
+  type LucideIcon,
+} from "lucide-react";
 import { useLanguage } from "@/lib/language-context";
-import type { NavItem } from "@/lib/nav-config";
+import type { NavItem, IconName } from "@/lib/nav-config";
+
+// Icons are resolved HERE, client-side, by name - never received as a
+// component/function prop from a Server Component (see nav-config.ts).
+const ICONS: Record<IconName, LucideIcon> = {
+  dashboard: LayoutDashboard,
+  hr: Users,
+  leave: CalendarDays,
+  communication: MessagesSquare,
+  academic: GraduationCap,
+  staff: IdCard,
+  students: BookUser,
+  examination: FileCheck2,
+  documents: FolderOpen,
+  meetings: CalendarClock,
+  reports: BarChart3,
+  settings: Settings,
+};
 
 export function Sidebar({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
@@ -31,7 +63,7 @@ export function Sidebar({ items }: { items: NavItem[] }) {
       <nav className="flex flex-col gap-0.5 p-3">
         {items.map((item) => {
           const active = pathname.startsWith(item.href);
-          const Icon = item.icon;
+          const Icon = ICONS[item.icon];
           return (
             <Link
               key={item.href}
