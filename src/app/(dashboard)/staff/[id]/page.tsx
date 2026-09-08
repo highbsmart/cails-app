@@ -2,25 +2,39 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { getStaffById, getPostingHistory, currentUserCan, listDepartments } from "@/lib/staff";
+import { getTrainingHistory, listAppraisalCriteria, getAppraisals, getPromotionHistory } from "@/lib/career";
 import { ProfileTabs } from "@/components/ProfileTabs";
 import { Field, EmptyModuleNote } from "@/components/Field";
 import { PostingHistoryTable, PostStaffForm } from "@/components/StaffPosting";
+import { TrainingTab } from "@/components/TrainingTab";
+import { PromotionTab } from "@/components/PromotionTab";
+import { AppraisalTab } from "@/components/AppraisalTab";
 
 export default async function StaffProfilePage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ postError?: string }>;
+  searchParams: Promise<{
+    postError?: string;
+    trainingError?: string;
+    promotionError?: string;
+    appraisalError?: string;
+  }>;
 }) {
   const { id } = await params;
-  const { postError } = await searchParams;
-  const [staff, postings, canEdit, departments] = await Promise.all([
-    getStaffById(id),
-    getPostingHistory(id),
-    currentUserCan("EDIT_STAFF"),
-    listDepartments(),
-  ]);
+  const { postError, trainingError, promotionError, appraisalError } = await searchParams;
+  const [staff, postings, canEdit, departments, training, criteria, appraisals, promotions] =
+    await Promise.all([
+      getStaffById(id),
+      getPostingHistory(id),
+      currentUserCan("EDIT_STAFF"),
+      listDepartments(),
+      getTrainingHistory(id),
+      listAppraisalCriteria(),
+      getAppraisals(id),
+      getPromotionHistory(id),
+    ]);
 
   if (!staff) notFound();
 
@@ -113,13 +127,19 @@ export default async function StaffProfilePage({
           {
             label: "Training",
             content: (
-              <EmptyModuleNote text="Training and development records will appear here once the Training module is built (Phase 2)." />
+              <TrainingTab staffId={staff.id} records={training} canEdit={canEdit} error={trainingError} />
             ),
           },
           {
             label: "Promotion",
             content: (
-              <EmptyModuleNote text="Career history (appointment → promotion → transfer) will appear here once that module is built (Phase 2)." />
+              <PromotionTab
+                staffId={staff.id}
+                records={promotions}
+                currentRank={staff.rank}
+                canEdit={canEdit}
+                error={promotionError}
+              />
             ),
           },
           {
@@ -131,7 +151,13 @@ export default async function StaffProfilePage({
           {
             label: "Appraisal",
             content: (
-              <EmptyModuleNote text="Performance appraisal records will appear here once that module is built (Phase 2)." />
+              <AppraisalTab
+                staffId={staff.id}
+                criteria={criteria}
+                appraisals={appraisals}
+                canEdit={canEdit}
+                error={appraisalError}
+              />
             ),
           },
           {
