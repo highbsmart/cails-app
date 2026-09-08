@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/lib/language-context";
 import type { NavItem } from "@/lib/nav-config";
@@ -12,9 +13,13 @@ export function Sidebar({ items }: { items: NavItem[] }) {
   return (
     <aside className="hidden w-64 shrink-0 border-e border-[var(--color-line)] bg-[var(--color-surface)] md:block">
       <div className="flex h-16 items-center gap-2 border-b border-[var(--color-line)] px-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-sm bg-[var(--color-green-deep)] font-serif text-lg text-[var(--color-brass-soft)]">
-          C
-        </div>
+        <Image
+          src="/cails-logo.jpg"
+          alt="CAILS crest"
+          width={36}
+          height={36}
+          className="h-9 w-9 shrink-0 rounded-full object-cover"
+        />
         <div className="leading-tight">
           <p className="font-serif text-[15px] font-medium text-[var(--color-green-deep)]">
             CAILS

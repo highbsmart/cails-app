@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { login } from "./actions";
 
 export default async function LoginPage({
@@ -11,9 +12,13 @@ export default async function LoginPage({
     <div className="flex min-h-screen items-center justify-center bg-[var(--color-paper)] px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-sm bg-[var(--color-green-deep)] font-serif text-2xl text-[var(--color-brass-soft)]">
-            C
-          </div>
+          <Image
+            src="/cails-logo.jpg"
+            alt="CAILS crest"
+            width={64}
+            height={64}
+            className="mx-auto mb-3 h-16 w-16 rounded-full object-cover"
+          />
           <h1 className="font-serif text-xl text-[var(--color-green-deep)]">
             CAILS Institutional Portal
           </h1>
