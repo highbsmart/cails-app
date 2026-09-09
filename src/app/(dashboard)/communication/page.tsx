@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, FileText } from "lucide-react";
 import { listInbox, listSent } from "@/lib/messages";
 import { MessageListItem } from "@/components/MessageListItem";
 import { ProfileTabs } from "@/components/ProfileTabs";
@@ -17,13 +17,22 @@ export default async function CommunicationPage() {
             {unreadCount > 0 ? `${unreadCount} unread` : "You're all caught up"}
           </p>
         </div>
-        <Link
-          href="/communication/new"
-          className="flex items-center gap-2 rounded-sm bg-[var(--color-green-deep)] px-4 py-2 text-sm font-medium text-[var(--color-paper)] hover:bg-[var(--color-green-mid)]"
-        >
-          <Plus className="h-4 w-4" strokeWidth={2} />
-          Compose
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/communication/memos"
+            className="flex items-center gap-2 rounded-sm border border-[var(--color-line)] px-4 py-2 text-sm font-medium text-[var(--color-green-deep)] hover:bg-[var(--color-surface)]"
+          >
+            <FileText className="h-4 w-4" strokeWidth={2} />
+            Official Memoranda
+          </Link>
+          <Link
+            href="/communication/new"
+            className="flex items-center gap-2 rounded-sm bg-[var(--color-green-deep)] px-4 py-2 text-sm font-medium text-[var(--color-paper)] hover:bg-[var(--color-green-mid)]"
+          >
+            <Plus className="h-4 w-4" strokeWidth={2} />
+            Compose
+          </Link>
+        </div>
       </div>
 
       <ProfileTabs
