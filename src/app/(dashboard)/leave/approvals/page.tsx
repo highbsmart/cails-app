@@ -65,7 +65,7 @@ export default async function LeaveApprovalsPage({
                 <input type="hidden" name="leave_id" value={r.id} />
                 <div className="flex-1">
                   <label className="mb-1 block text-xs text-[var(--color-ink-soft)]">
-                    Comment (optional)
+                    Comment (required if escalating)
                   </label>
                   <input
                     name="comment"
@@ -96,6 +96,14 @@ export default async function LeaveApprovalsPage({
                   className="rounded-sm border border-[var(--color-clay)] px-3 py-1.5 text-sm font-medium text-[var(--color-clay)] hover:bg-[var(--color-clay)]/10"
                 >
                   Reject
+                </button>
+                <button
+                  type="submit"
+                  name="action"
+                  value="escalated"
+                  className="rounded-sm border border-[var(--color-ink-soft)] px-3 py-1.5 text-sm font-medium text-[var(--color-ink-soft)] hover:bg-[var(--color-surface)]"
+                >
+                  Escalate to Provost
                 </button>
               </form>
             </div>

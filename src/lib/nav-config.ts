@@ -13,6 +13,7 @@ export type IconName =
   | "examination"
   | "documents"
   | "meetings"
+  | "tasks"
   | "reports"
   | "settings";
 
@@ -65,6 +66,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   { href: "/documents", label: "Documents", labelAr: "الوثائق", icon: "documents" },
   { href: "/meetings", label: "Meetings", labelAr: "الاجتماعات", icon: "meetings" },
+  { href: "/tasks", label: "Tasks", labelAr: "المهام", icon: "tasks" },
   { href: "/reports", label: "Reports", labelAr: "التقارير", icon: "reports" },
   {
     href: "/settings",

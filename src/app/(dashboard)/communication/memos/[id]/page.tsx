@@ -130,7 +130,18 @@ export default async function MemoDetailPage({
             >
               Reject
             </button>
+            <button
+              type="submit"
+              name="action"
+              value="escalated"
+              className="rounded-sm border border-[var(--color-ink-soft)] px-3 py-1.5 text-sm font-medium text-[var(--color-ink-soft)]"
+            >
+              Escalate to Final Authority
+            </button>
           </div>
+          <p className="mt-2 text-xs text-[var(--color-ink-soft)]">
+            Escalating requires a comment and skips remaining intermediate steps.
+          </p>
           <p className="mt-2 text-xs text-[var(--color-ink-soft)]">
             Only visible/actionable if you currently hold the office required at this step —
             the database verifies this independently of what buttons are shown.

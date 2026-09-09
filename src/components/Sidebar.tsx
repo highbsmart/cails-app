@@ -16,6 +16,7 @@ import {
   BarChart3,
   Settings,
   CalendarDays,
+  ListChecks,
   type LucideIcon,
 } from "lucide-react";
 import { useLanguage } from "@/lib/language-context";
@@ -34,6 +35,7 @@ const ICONS: Record<IconName, LucideIcon> = {
   examination: FileCheck2,
   documents: FolderOpen,
   meetings: CalendarClock,
+  tasks: ListChecks,
   reports: BarChart3,
   settings: Settings,
 };
