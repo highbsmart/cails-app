@@ -14,6 +14,7 @@ export type IconName =
   | "documents"
   | "meetings"
   | "tasks"
+  | "accreditation"
   | "reports"
   | "settings";
 
@@ -67,6 +68,13 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/documents", label: "Documents", labelAr: "الوثائق", icon: "documents" },
   { href: "/meetings", label: "Meetings", labelAr: "الاجتماعات", icon: "meetings" },
   { href: "/tasks", label: "Tasks", labelAr: "المهام", icon: "tasks" },
+  {
+    href: "/accreditation",
+    label: "Accreditation",
+    labelAr: "الاعتماد",
+    icon: "accreditation",
+    requiresAnyRole: ["SYSTEM_ADMIN", "PROVOST", "DPA", "DAPEQA"],
+  },
   { href: "/reports", label: "Reports", labelAr: "التقارير", icon: "reports" },
   {
     href: "/settings",

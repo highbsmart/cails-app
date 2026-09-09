@@ -17,6 +17,7 @@ import {
   Settings,
   CalendarDays,
   ListChecks,
+  ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
 import { useLanguage } from "@/lib/language-context";
@@ -36,6 +37,7 @@ const ICONS: Record<IconName, LucideIcon> = {
   documents: FolderOpen,
   meetings: CalendarClock,
   tasks: ListChecks,
+  accreditation: ShieldCheck,
   reports: BarChart3,
   settings: Settings,
 };
