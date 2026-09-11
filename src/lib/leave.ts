@@ -32,6 +32,7 @@ export async function listLeaveTypes(): Promise<LeaveType[]> {
   const { data, error } = await supabase
     .from("leave_types")
     .select("id, name, max_days_per_year, requires_document")
+    .eq("is_active", true)
     .order("name");
   if (error) throw error;
   return data ?? [];

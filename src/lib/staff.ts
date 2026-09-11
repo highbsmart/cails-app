@@ -111,6 +111,7 @@ export async function listDepartments() {
   const { data, error } = await supabase
     .from("departments")
     .select("id, name, school_id")
+    .eq("is_active", true)
     .order("name");
   if (error) throw error;
   return data ?? [];

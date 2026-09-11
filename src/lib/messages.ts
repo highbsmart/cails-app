@@ -47,7 +47,7 @@ export async function findUserByEmail(email: string): Promise<{ id: string; full
 
 export async function listAllOffices(): Promise<OfficeOption[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("offices").select("id, name").order("name");
+  const { data, error } = await supabase.from("offices").select("id, name").eq("is_active", true).order("name");
   if (error) throw error;
   return data ?? [];
 }
