@@ -48,7 +48,7 @@ export default async function NewEvidencePage({
           <label className="mb-1 block text-sm text-[var(--color-ink-soft)]">Reference Link (optional)</label>
           <input name="reference_url" type="url" placeholder="https://…" className="w-full rounded-sm border border-[var(--color-line)] bg-white px-3 py-2 text-sm focus:outline-none" />
           <p className="mt-1 text-xs text-[var(--color-ink-soft)]">
-            Full file attachment arrives with the Document Registry — for now, log a link or note it's held physically.
+            For an actual file, upload it in Documents and file it under Accreditation, then paste its link here or leave this blank.
           </p>
         </div>
         <div>

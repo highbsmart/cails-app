@@ -1,0 +1,10 @@
+-- Applied to production on 2026-09-11 (in two parts).
+-- Private 'documents' storage bucket, 20 MB per file, plus the catalogue
+-- table that records what each file is and which record it belongs to.
+--
+-- Visibility rule: a signed download URL can only be produced for a file whose
+-- catalogue row the user is allowed to SELECT, because the storage policy
+-- delegates to public.documents. That keeps access decided in one place.
+--
+-- Recorded here for the repo; it is already live. See the migration history
+-- in Supabase under 'document_registry' and 'document_registry_storage_policies'.

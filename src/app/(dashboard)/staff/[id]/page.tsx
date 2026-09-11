@@ -4,6 +4,8 @@ import { ArrowLeft } from "lucide-react";
 import { getStaffById, getPostingHistory, currentUserCan, listDepartments } from "@/lib/staff";
 import { getTrainingHistory, listAppraisalCriteria, getAppraisals, getPromotionHistory } from "@/lib/career";
 import { ProfileTabs } from "@/components/ProfileTabs";
+import { DocumentPanel } from "@/components/DocumentPanel";
+import { listDocumentsFor } from "@/lib/documents";
 import { Field, EmptyModuleNote } from "@/components/Field";
 import { PostingHistoryTable, PostStaffForm } from "@/components/StaffPosting";
 import { TrainingTab } from "@/components/TrainingTab";
@@ -20,10 +22,11 @@ export default async function StaffProfilePage({
     trainingError?: string;
     promotionError?: string;
     appraisalError?: string;
+    docError?: string;
   }>;
 }) {
   const { id } = await params;
-  const { postError, trainingError, promotionError, appraisalError } = await searchParams;
+  const { postError, trainingError, promotionError, appraisalError, docError } = await searchParams;
   const [staff, postings, canEdit, departments, training, criteria, appraisals, promotions] =
     await Promise.all([
       getStaffById(id),
@@ -37,6 +40,8 @@ export default async function StaffProfilePage({
     ]);
 
   if (!staff) notFound();
+
+  const documents = await listDocumentsFor("staff", id);
 
   const fullName = [staff.title, staff.first_name, staff.middle_name, staff.surname]
     .filter(Boolean)
@@ -145,7 +150,14 @@ export default async function StaffProfilePage({
           {
             label: "Documents",
             content: (
-              <EmptyModuleNote text="Staff documents (CV, credentials, appointment letters) will appear here once the Document Registry is built (Phase 3)." />
+              <DocumentPanel
+                documents={documents}
+                entityType="staff"
+                entityId={staff.id}
+                returnTo={`/staff/${staff.id}`}
+                error={docError}
+                emptyText="No documents on file yet — CVs, credentials and appointment letters go here."
+              />
             ),
           },
           {
