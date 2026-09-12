@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 export const DOCUMENT_ENTITY_TYPES = [
   "general",
   "staff",
+  "student",
   "leave",
   "accreditation",
   "memo",
