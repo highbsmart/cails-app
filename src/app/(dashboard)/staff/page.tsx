@@ -1,16 +1,18 @@
 import Link from "next/link";
 import { Plus, Search as SearchIcon } from "lucide-react";
-import { listStaff, currentUserCan } from "@/lib/staff";
+import { listStaff, currentUserCan, listDepartments } from "@/lib/staff";
+import { bulkImportStaff } from "./import-actions";
 
 export default async function StaffDirectoryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; error?: string; notice?: string }>;
 }) {
-  const { q } = await searchParams;
-  const [staff, canEdit] = await Promise.all([
+  const { q, error, notice } = await searchParams;
+  const [staff, canEdit, departments] = await Promise.all([
     listStaff(q),
     currentUserCan("EDIT_STAFF"),
+    listDepartments(),
   ]);
 
   return (
@@ -34,6 +36,55 @@ export default async function StaffDirectoryPage({
           </Link>
         )}
       </div>
+
+      {notice && (
+        <p className="rounded-sm border border-[var(--color-green-deep)]/30 bg-[var(--color-green-deep)]/5 px-3 py-2.5 text-sm text-[var(--color-green-deep)]">
+          {notice}
+        </p>
+      )}
+      {error && (
+        <p className="rounded-sm border-2 border-[var(--color-clay)]/50 bg-[var(--color-clay)]/10 px-3 py-2.5 text-sm font-medium text-[var(--color-clay)]">
+          {error}
+        </p>
+      )}
+
+      {canEdit && (
+        <details className="rounded-sm border border-[var(--color-line)] bg-[var(--color-surface)] p-4">
+          <summary className="cursor-pointer text-sm font-medium text-[var(--color-green-deep)]">
+            Import many staff records
+          </summary>
+          <form action={bulkImportStaff} className="mt-4 space-y-3">
+            <p className="text-sm text-[var(--color-ink-soft)]">
+              One person per line:{" "}
+              <span className="font-mono text-xs">
+                staff id,first name,surname,email,department,rank,employment type,appointment date
+              </span>
+              . Only first name and surname are required &mdash; leave anything else blank, but keep
+              the commas. Dates as YYYY-MM-DD. A header row is ignored. Up to 300 rows at a time.
+            </p>
+            <textarea
+              name="csv"
+              rows={10}
+              required
+              placeholder={"CAILS/001,Musa,Ibrahim,musa@kwaracails.edu.ng,English,Senior Lecturer,academic,2015-03-01\nCAILS/002,Aisha,Bello,,Computer Science,Lecturer I,academic,2019-09-15"}
+              className="w-full rounded-sm border border-[var(--color-line)] bg-white px-3 py-2 font-mono text-xs"
+            />
+            <p className="text-xs text-[var(--color-ink-soft)]">
+              Department names match loosely, so &ldquo;English&rdquo; finds &ldquo;Department of
+              English&rdquo;. Available:{" "}
+              <span className="font-mono">
+                {departments.map((d) => d.name.replace(/^Department of /, "")).join(", ")}
+              </span>
+            </p>
+            <button
+              type="submit"
+              className="rounded-sm bg-[var(--color-green-deep)] px-4 py-2 text-sm font-medium text-[var(--color-paper)] hover:bg-[var(--color-green-mid)]"
+            >
+              Import Staff
+            </button>
+          </form>
+        </details>
+      )}
 
       <form className="flex items-center gap-2 rounded-sm border border-[var(--color-line)] bg-white/60 px-3 py-2 sm:max-w-sm">
         <SearchIcon className="h-4 w-4 shrink-0 text-[var(--color-ink-soft)]" strokeWidth={1.75} />
