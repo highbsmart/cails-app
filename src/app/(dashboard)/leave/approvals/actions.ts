@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { notifyLeaveActioned } from "@/lib/notify";
 
 export async function actOnLeave(formData: FormData) {
   const leaveId = String(formData.get("leave_id") ?? "");
@@ -24,6 +25,10 @@ export async function actOnLeave(formData: FormData) {
   if (error) {
     redirect("/leave/approvals?error=" + encodeURIComponent(error.message));
   }
+
+  // Only after Postgres has accepted the decision — so the email always
+  // reflects what actually happened, never what was merely attempted.
+  await notifyLeaveActioned(leaveId, action);
 
   revalidatePath("/leave/approvals");
   revalidatePath("/leave");

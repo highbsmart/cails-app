@@ -77,6 +77,19 @@ async function createOne(
   if (staffMatch) {
     await admin.from("staff").update({ user_id: userId }).eq("id", staffMatch.id);
     notes.push("linked to staff record");
+  } else {
+    // Not staff — try the student register, so students reach their own results.
+    const { data: studentMatch } = await admin
+      .from("students")
+      .select("id")
+      .eq("email", email)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (studentMatch) {
+      await admin.from("students").update({ user_id: userId }).eq("id", studentMatch.id);
+      notes.push("linked to student record");
+    }
   }
 
   if (roleId) {

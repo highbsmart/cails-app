@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 import { listStudents, STUDENT_STATUSES } from "@/lib/students";
 import { listProgrammes } from "@/lib/academic";
 import { currentUserCan } from "@/lib/staff";
+import { bulkImportStudents } from "./import-actions";
 
 const input =
   "rounded-sm border border-[var(--color-line)] bg-white px-3 py-1.5 text-sm focus:outline-none focus:border-[var(--color-brass)]";
@@ -11,9 +12,9 @@ const input =
 export default async function StudentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; programme?: string; status?: string; error?: string }>;
+  searchParams: Promise<{ q?: string; programme?: string; status?: string; error?: string; notice?: string }>;
 }) {
-  const { q, programme, status, error } = await searchParams;
+  const { q, programme, status, error, notice } = await searchParams;
   const [students, programmes, canManage] = await Promise.all([
     listStudents({ search: q, programmeId: programme, status }),
     listProgrammes(),
@@ -40,10 +41,51 @@ export default async function StudentsPage({
         )}
       </div>
 
+      {notice && (
+        <p className="rounded-sm border border-[var(--color-green-deep)]/30 bg-[var(--color-green-deep)]/5 px-3 py-2.5 text-sm text-[var(--color-green-deep)]">
+          {notice}
+        </p>
+      )}
       {error && (
-        <p className="rounded-sm border border-[var(--color-clay)]/30 bg-[var(--color-clay)]/10 px-3 py-2 text-sm text-[var(--color-clay)]">
+        <p className="rounded-sm border-2 border-[var(--color-clay)]/50 bg-[var(--color-clay)]/10 px-3 py-2.5 text-sm font-medium text-[var(--color-clay)]">
           {error}
         </p>
+      )}
+
+      {canManage && (
+        <details className="rounded-sm border border-[var(--color-line)] bg-[var(--color-surface)] p-4">
+          <summary className="cursor-pointer text-sm font-medium text-[var(--color-green-deep)]">
+            Import many students
+          </summary>
+          <form action={bulkImportStudents} className="mt-4 space-y-3">
+            <p className="text-sm text-[var(--color-ink-soft)]">
+              One student per line:{" "}
+              <span className="font-mono text-xs">
+                matric number,first name,surname,email,programme,level
+              </span>
+              . Matric number, first name and surname are required. The department is taken from the
+              programme. Up to 500 rows at a time.
+            </p>
+            <textarea
+              name="csv"
+              rows={10}
+              required
+              placeholder={"CAILS/2026/001,Musa,Ibrahim,musa@student.kwaracails.edu.ng,Computer Science,1\nCAILS/2026/002,Aisha,Bello,,Common Law,2"}
+              className="w-full rounded-sm border border-[var(--color-line)] bg-white px-3 py-2 font-mono text-xs"
+            />
+            <p className="text-xs text-[var(--color-ink-soft)]">
+              Programme names match loosely &mdash; &ldquo;Computer Science&rdquo; finds
+              &ldquo;Diploma in Computer Science&rdquo;. Add the email if you want the student to
+              have a login later; accounts link to the record by email.
+            </p>
+            <button
+              type="submit"
+              className="rounded-sm bg-[var(--color-green-deep)] px-4 py-2 text-sm font-medium text-[var(--color-paper)] hover:bg-[var(--color-green-mid)]"
+            >
+              Import Students
+            </button>
+          </form>
+        </details>
       )}
 
       <form className="flex flex-wrap items-end gap-2">

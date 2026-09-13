@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { notifyLeaveSubmitted } from "@/lib/notify";
 
 export async function submitLeave(formData: FormData) {
   const supabase = await createClient();
@@ -34,10 +35,18 @@ export async function submitLeave(formData: FormData) {
     reason: String(formData.get("reason") ?? "").trim() || null,
   };
 
-  const { error } = await supabase.from("staff_leave").insert(payload);
+  const { data: created, error } = await supabase
+    .from("staff_leave")
+    .insert(payload)
+    .select("id")
+    .maybeSingle();
 
   if (error) {
     redirect("/leave/new?error=" + encodeURIComponent(error.message));
+  }
+
+  if (created?.id) {
+    await notifyLeaveSubmitted(created.id);
   }
 
   redirect("/leave");

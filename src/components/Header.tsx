@@ -44,6 +44,12 @@ export function Header({ user }: { user: UserContext }) {
             </p>
           </div>
           <a
+            href="/my-record"
+            className="text-sm text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] hover:underline"
+          >
+            My Record
+          </a>
+          <a
             href="/account"
             className="text-sm text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] hover:underline"
           >
