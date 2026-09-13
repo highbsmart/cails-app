@@ -1,8 +1,8 @@
 "use client";
 
+import { LabeledField } from "@/components/LabeledField";
 import { useState } from "react";
 import type { OfficeOption } from "@/lib/messages";
-import { LabeledField } from "@/components/LabeledField";
 
 export function RecipientPicker({ offices }: { offices: OfficeOption[] }) {
   const [type, setType] = useState<"office" | "person">("office");

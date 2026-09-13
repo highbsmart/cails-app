@@ -1,3 +1,4 @@
+import { LabeledField } from "@/components/LabeledField";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -15,7 +16,6 @@ import { ProfileTabs } from "@/components/ProfileTabs";
 import { ConfirmSubmit } from "@/components/ConfirmSubmit";
 import { DocumentPanel } from "@/components/DocumentPanel";
 import { updateStudent, archiveStudent, registerCourse, unregisterCourse } from "../actions";
-import { LabeledField } from "@/components/LabeledField";
 
 const input =
   "w-full rounded-sm border border-[var(--color-line)] bg-white px-3 py-2 text-sm focus:outline-none focus:border-[var(--color-brass)]";

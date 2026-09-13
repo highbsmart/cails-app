@@ -1,3 +1,4 @@
+import { LabeledField } from "@/components/LabeledField";
 import { ConfirmSubmit } from "@/components/ConfirmSubmit";
 import {
   DOCUMENT_CATEGORIES,
@@ -6,7 +7,6 @@ import {
   type DocumentEntityType,
 } from "@/lib/documents";
 import {
-import { LabeledField } from "@/components/LabeledField";
   uploadDocument,
   updateDocument,
   deleteDocument,

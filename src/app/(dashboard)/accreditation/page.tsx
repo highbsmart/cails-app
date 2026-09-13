@@ -1,8 +1,8 @@
+import { LabeledField } from "@/components/LabeledField";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { listCategories, listEvidence, computeReadiness } from "@/lib/accreditation";
 import { updateEvidenceStatus } from "./actions";
-import { LabeledField } from "@/components/LabeledField";
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-[var(--color-ink-soft)]/15 text-[var(--color-ink-soft)]",

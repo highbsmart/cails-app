@@ -1,3 +1,4 @@
+import { LabeledField } from "@/components/LabeledField";
 import {
   listAllProfiles,
   listRoles,
@@ -15,7 +16,6 @@ import { NoAccess } from "@/components/NoAccess";
 import { currentUserCanAny } from "@/lib/staff";
 import { ConfirmSubmit } from "@/components/ConfirmSubmit";
 import {
-import { LabeledField } from "@/components/LabeledField";
   assignRole,
   updateUserRole,
   revokeRole,

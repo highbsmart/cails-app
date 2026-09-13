@@ -1,6 +1,6 @@
+import { LabeledField } from "@/components/LabeledField";
 import { listDocuments, DOCUMENT_ENTITY_TYPES } from "@/lib/documents";
 import { DocumentPanel } from "@/components/DocumentPanel";
-import { LabeledField } from "@/components/LabeledField";
 
 const input =
   "rounded-sm border border-[var(--color-line)] bg-white px-3 py-1.5 text-sm focus:outline-none focus:border-[var(--color-brass)]";

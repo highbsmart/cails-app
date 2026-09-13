@@ -1,8 +1,8 @@
+import { LabeledField } from "@/components/LabeledField";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { listMeetings, formatMeetingDate, MEETING_TYPES, MEETING_STATUSES } from "@/lib/meetings";
 import { currentUserCan } from "@/lib/staff";
-import { LabeledField } from "@/components/LabeledField";
 
 const input =
   "rounded-sm border border-[var(--color-line)] bg-white px-3 py-1.5 text-sm focus:outline-none focus:border-[var(--color-brass)]";

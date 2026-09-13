@@ -1,10 +1,10 @@
+import { LabeledField } from "@/components/LabeledField";
 import { Download } from "lucide-react";
 import { buildReport, isReportKey, REPORT_KEYS, REPORT_LABELS, type ReportKey } from "@/lib/reports";
 import { listAcademicSessions } from "@/lib/academic";
 import { ProfileTabs } from "@/components/ProfileTabs";
 import { NoAccess } from "@/components/NoAccess";
 import { currentUserCan } from "@/lib/staff";
-import { LabeledField } from "@/components/LabeledField";
 
 const input =
   "rounded-sm border border-[var(--color-line)] bg-white px-3 py-1.5 text-sm focus:outline-none focus:border-[var(--color-brass)]";
