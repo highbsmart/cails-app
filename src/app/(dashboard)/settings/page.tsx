@@ -1,4 +1,11 @@
 import { LabeledField } from "@/components/LabeledField";
+import { adminApiConfigured } from "@/lib/supabase/admin";
+import {
+  createUserAccount,
+  bulkCreateAccounts,
+  resetUserPassword,
+  setAccountActive,
+} from "./account-actions";
 import {
   listAllProfiles,
   listRoles,
@@ -59,14 +66,14 @@ const saveBtn =
 const quietBtn = "text-xs text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] hover:underline";
 const dangerBtn = "text-xs text-[var(--color-clay)] hover:underline";
 
-const TAB_ORDER = ["users", "organization", "config", "leave"];
+const TAB_ORDER = ["accounts", "users", "organization", "config", "leave"];
 
 export default async function SettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; tab?: string }>;
+  searchParams: Promise<{ error?: string; notice?: string; tab?: string }>;
 }) {
-  const { error, tab } = await searchParams;
+  const { error, notice, tab } = await searchParams;
 
   // Settings spans three separate grants; holding any one earns the page, and
   // RLS still decides which sections actually save.
@@ -78,7 +85,8 @@ export default async function SettingsPage({
   if (!canConfigure) {
     return <NoAccess area="Settings" permission="MANAGE_USERS" />;
   }
-  const initialIndex = Math.max(0, TAB_ORDER.indexOf(tab ?? "users"));
+  const initialIndex = Math.max(0, TAB_ORDER.indexOf(tab ?? "accounts"));
+  const canCreateAccounts = adminApiConfigured();
 
   const [assignments, roles, offices, schools, departments, numberingRules, gradeBands, leaveTypes, sessions] =
     await Promise.all([
@@ -103,6 +111,12 @@ export default async function SettingsPage({
         </p>
       </div>
 
+      {notice && (
+        <p className="rounded-sm border border-[var(--color-green-deep)]/30 bg-[var(--color-green-deep)]/5 px-3 py-2.5 text-sm text-[var(--color-green-deep)]">
+          {notice}
+        </p>
+      )}
+
       {error && (
         <p
           id="settings-error"
@@ -115,6 +129,155 @@ export default async function SettingsPage({
       <ProfileTabs
         initialIndex={initialIndex}
         tabs={[
+          {
+            label: "Accounts",
+            content: (
+              <div className="space-y-5">
+                {!canCreateAccounts && (
+                  <p className="rounded-sm border border-[var(--color-brass)]/40 bg-[var(--color-brass)]/10 px-3 py-2.5 text-sm">
+                    Account creation is switched off because the server has no{" "}
+                    <span className="font-mono text-xs">SUPABASE_SERVICE_ROLE_KEY</span>. Add it in
+                    Vercel under Settings → Environment Variables, then redeploy. Until then you can
+                    still assign roles to accounts that already exist.
+                  </p>
+                )}
+
+                <div>
+                  <h3 className="mb-2 font-serif text-sm text-[var(--color-green-deep)]">
+                    Existing accounts ({profiles.length})
+                  </h3>
+                  <div className="rounded-sm border border-[var(--color-line)] bg-white/50 p-3">
+                    <ul>
+                      {profiles.map((person) => (
+                        <li
+                          key={person.id}
+                          className={`border-b border-[var(--color-line)] py-2.5 last:border-0 ${
+                            person.is_active ? "" : "opacity-50"
+                          }`}
+                        >
+                          <div className="mb-1.5 text-sm">
+                            {person.full_name}
+                            <span className="ml-1.5 text-xs text-[var(--color-ink-soft)]">
+                              {person.email}
+                            </span>
+                            {!person.is_active && (
+                              <span className="ml-1.5 text-xs uppercase tracking-wide text-[var(--color-clay)]">
+                                suspended
+                              </span>
+                            )}
+                          </div>
+                          {canCreateAccounts && (
+                            <div className="flex flex-wrap items-end gap-2">
+                              <form action={resetUserPassword} className="flex flex-wrap items-end gap-2">
+                                <input type="hidden" name="user_id" value={person.id} />
+                                <LabeledField label="Set a new password">
+                                  <input
+                                    name="password"
+                                    type="text"
+                                    minLength={8}
+                                    required
+                                    placeholder="at least 8 characters"
+                                    className={`${input} w-56`}
+                                  />
+                                </LabeledField>
+                                <button type="submit" className={saveBtn}>
+                                  Reset
+                                </button>
+                              </form>
+                              <form action={setAccountActive}>
+                                <input type="hidden" name="user_id" value={person.id} />
+                                <input type="hidden" name="value" value={person.is_active ? "false" : "true"} />
+                                <button type="submit" className={quietBtn}>
+                                  {person.is_active ? "Suspend" : "Re-enable"}
+                                </button>
+                              </form>
+                            </div>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {canCreateAccounts && (
+                  <>
+                    <details className="rounded-sm border border-[var(--color-line)] bg-[var(--color-surface)] p-4">
+                      <summary className="cursor-pointer text-sm font-medium text-[var(--color-green-deep)]">
+                        Create one account
+                      </summary>
+                      <form action={createUserAccount} className="mt-4 space-y-3">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          <LabeledField label="Full name">
+                            <input name="full_name" required className={`${input} w-full`} />
+                          </LabeledField>
+                          <LabeledField label="Email">
+                            <input name="email" type="email" required className={`${input} w-full`} />
+                          </LabeledField>
+                          <LabeledField label="Temporary password">
+                            <input
+                              name="password"
+                              type="text"
+                              minLength={8}
+                              required
+                              placeholder="at least 8 characters"
+                              className={`${input} w-full`}
+                            />
+                          </LabeledField>
+                          <LabeledField label="Role (optional)">
+                            <select name="role_id" defaultValue="" className={`${input} w-full`}>
+                              <option value="">Assign later</option>
+                              {roles.map((r) => (
+                                <option key={r.id} value={r.id}>
+                                  {r.name}
+                                </option>
+                              ))}
+                            </select>
+                          </LabeledField>
+                        </div>
+                        <p className="text-xs text-[var(--color-ink-soft)]">
+                          You choose the password and pass it to the person yourself — nothing is
+                          emailed. If a staff record already carries this email, the account is
+                          linked to it automatically.
+                        </p>
+                        <button type="submit" className={`${primaryBtn} px-4 py-2`}>
+                          Create Account
+                        </button>
+                      </form>
+                    </details>
+
+                    <details className="rounded-sm border border-[var(--color-line)] bg-[var(--color-surface)] p-4">
+                      <summary className="cursor-pointer text-sm font-medium text-[var(--color-green-deep)]">
+                        Import many accounts
+                      </summary>
+                      <form action={bulkCreateAccounts} className="mt-4 space-y-3">
+                        <p className="text-sm text-[var(--color-ink-soft)]">
+                          One person per line:{" "}
+                          <span className="font-mono text-xs">full name,email,password,role code</span>
+                          . The role code is optional. A header row is ignored. Up to 200 rows at a
+                          time.
+                        </p>
+                        <textarea
+                          name="csv"
+                          rows={10}
+                          required
+                          placeholder={"Musa Ibrahim,musa@example.edu.ng,Temp1234,LECTURER\nAisha Bello,aisha@example.edu.ng,Temp5678,REGISTRAR"}
+                          className="w-full rounded-sm border border-[var(--color-line)] bg-white px-3 py-2 font-mono text-xs"
+                        />
+                        <p className="text-xs text-[var(--color-ink-soft)]">
+                          Rows are processed one at a time, so a bad line doesn&apos;t stop the rest —
+                          the summary names any that failed and why. Valid role codes:{" "}
+                          <span className="font-mono">{roles.map((r) => r.code).join(", ")}</span>
+                        </p>
+                        <button type="submit" className={`${primaryBtn} px-4 py-2`}>
+                          Import Accounts
+                        </button>
+                      </form>
+                    </details>
+                  </>
+                )}
+              </div>
+            ),
+          },
           {
             label: "Users & Roles",
             content: (

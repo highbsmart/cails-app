@@ -43,6 +43,12 @@ export function Header({ user }: { user: UserContext }) {
               {user.roleNames[0] ?? "No role assigned"}
             </p>
           </div>
+          <a
+            href="/account"
+            className="text-sm text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] hover:underline"
+          >
+            My Account
+          </a>
           <form action={signOut}>
             <button
               type="submit"
