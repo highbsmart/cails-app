@@ -1,0 +1,10 @@
+-- Applied to production on 2026-09-13 as 'meetings_module'.
+--
+-- Three new tables: meetings, meeting_agenda_items, meeting_attendance.
+-- MANAGE_MEETINGS (already defined, held by 5 roles) governs every write;
+-- reading is open to any authenticated user, since agenda and adopted
+-- minutes are institutional records rather than private ones.
+--
+-- Agenda items and attendance cascade with their meeting. Attached papers do
+-- not -- they live in the documents registry and survive the meeting's
+-- deletion, which is why documents.entity_type gained 'meeting' here.
