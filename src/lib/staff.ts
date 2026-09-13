@@ -116,3 +116,9 @@ export async function listDepartments() {
   if (error) throw error;
   return data ?? [];
 }
+
+/** True if the user holds any one of the given permissions. */
+export async function currentUserCanAny(permissionCodes: string[]): Promise<boolean> {
+  const results = await Promise.all(permissionCodes.map((code) => currentUserCan(code)));
+  return results.some(Boolean);
+}

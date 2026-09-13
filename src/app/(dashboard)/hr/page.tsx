@@ -1,8 +1,14 @@
 import Link from "next/link";
 import { getHrOverview, type HeadcountRow } from "@/lib/hr";
 import { ProfileTabs } from "@/components/ProfileTabs";
+import { NoAccess } from "@/components/NoAccess";
+import { currentUserCan } from "@/lib/staff";
 
 export default async function HrPage() {
+  if (!(await currentUserCan("VIEW_STAFF"))) {
+    return <NoAccess area="Human Resources" permission="VIEW_STAFF" />;
+  }
+
   const hr = await getHrOverview();
 
   return (

@@ -11,6 +11,8 @@ import {
   listAcademicSessionsFull,
 } from "@/lib/settings";
 import { ProfileTabs } from "@/components/ProfileTabs";
+import { NoAccess } from "@/components/NoAccess";
+import { currentUserCanAny } from "@/lib/staff";
 import { ConfirmSubmit } from "@/components/ConfirmSubmit";
 import {
   assignRole,
@@ -64,6 +66,17 @@ export default async function SettingsPage({
   searchParams: Promise<{ error?: string; tab?: string }>;
 }) {
   const { error, tab } = await searchParams;
+
+  // Settings spans three separate grants; holding any one earns the page, and
+  // RLS still decides which sections actually save.
+  const canConfigure = await currentUserCanAny([
+    "MANAGE_USERS",
+    "CONFIGURE_ORG_UNITS",
+    "CONFIGURE_WORKFLOWS",
+  ]);
+  if (!canConfigure) {
+    return <NoAccess area="Settings" permission="MANAGE_USERS" />;
+  }
   const initialIndex = Math.max(0, TAB_ORDER.indexOf(tab ?? "users"));
 
   const [assignments, roles, offices, schools, departments, numberingRules, gradeBands, leaveTypes, sessions] =

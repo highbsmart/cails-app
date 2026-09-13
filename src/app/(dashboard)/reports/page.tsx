@@ -2,6 +2,8 @@ import { Download } from "lucide-react";
 import { buildReport, isReportKey, REPORT_KEYS, REPORT_LABELS, type ReportKey } from "@/lib/reports";
 import { listAcademicSessions } from "@/lib/academic";
 import { ProfileTabs } from "@/components/ProfileTabs";
+import { NoAccess } from "@/components/NoAccess";
+import { currentUserCan } from "@/lib/staff";
 
 const input =
   "rounded-sm border border-[var(--color-line)] bg-white px-3 py-1.5 text-sm focus:outline-none focus:border-[var(--color-brass)]";
@@ -12,6 +14,10 @@ export default async function ReportsPage({
   searchParams: Promise<{ report?: string; session?: string }>;
 }) {
   const { report, session } = await searchParams;
+
+  if (!(await currentUserCan("VIEW_REPORTS"))) {
+    return <NoAccess area="Reports" permission="VIEW_REPORTS" />;
+  }
   const active: ReportKey = report && isReportKey(report) ? report : "students-by-programme";
 
   // All four are cheap and the tab switch is client-side, so building them
