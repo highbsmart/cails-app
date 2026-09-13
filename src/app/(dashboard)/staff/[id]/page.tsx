@@ -6,7 +6,10 @@ import { getTrainingHistory, listAppraisalCriteria, getAppraisals, getPromotionH
 import { ProfileTabs } from "@/components/ProfileTabs";
 import { DocumentPanel } from "@/components/DocumentPanel";
 import { listDocumentsFor } from "@/lib/documents";
-import { Field, EmptyModuleNote } from "@/components/Field";
+import { listQualifications, getStaffLeaveHistory, getAuditTrail } from "@/lib/hr";
+import { ConfirmSubmit } from "@/components/ConfirmSubmit";
+import { addQualification, deleteQualification } from "./career-actions";
+import { Field } from "@/components/Field";
 import { PostingHistoryTable, PostStaffForm } from "@/components/StaffPosting";
 import { TrainingTab } from "@/components/TrainingTab";
 import { PromotionTab } from "@/components/PromotionTab";
@@ -23,10 +26,12 @@ export default async function StaffProfilePage({
     promotionError?: string;
     appraisalError?: string;
     docError?: string;
+    qualError?: string;
   }>;
 }) {
   const { id } = await params;
-  const { postError, trainingError, promotionError, appraisalError, docError } = await searchParams;
+  const { postError, trainingError, promotionError, appraisalError, docError, qualError } =
+    await searchParams;
   const [staff, postings, canEdit, departments, training, criteria, appraisals, promotions] =
     await Promise.all([
       getStaffById(id),
@@ -41,7 +46,12 @@ export default async function StaffProfilePage({
 
   if (!staff) notFound();
 
-  const documents = await listDocumentsFor("staff", id);
+  const [documents, qualifications, leaveHistory, auditTrail] = await Promise.all([
+    listDocumentsFor("staff", id),
+    listQualifications(id),
+    getStaffLeaveHistory(id),
+    getAuditTrail("staff", id),
+  ]);
 
   const fullName = [staff.title, staff.first_name, staff.middle_name, staff.surname]
     .filter(Boolean)
@@ -120,13 +130,118 @@ export default async function StaffProfilePage({
           {
             label: "Qualifications",
             content: (
-              <EmptyModuleNote text="Qualifications records will appear here once the Qualifications module is built (Phase 2)." />
+              <div className="space-y-4">
+                {qualError && (
+                  <p className="rounded-sm border border-[var(--color-clay)]/30 bg-[var(--color-clay)]/10 px-3 py-2 text-sm text-[var(--color-clay)]">
+                    {qualError}
+                  </p>
+                )}
+                <div className="rounded-sm border border-[var(--color-line)] bg-white/50 p-3">
+                  {qualifications.length === 0 ? (
+                    <p className="text-sm text-[var(--color-ink-soft)]">No qualifications recorded yet.</p>
+                  ) : (
+                    <ul>
+                      {qualifications.map((q) => (
+                        <li
+                          key={q.id}
+                          className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--color-line)] py-2 last:border-0"
+                        >
+                          <div className="text-sm">
+                            {q.qualification}
+                            {q.discipline ? ` — ${q.discipline}` : ""}
+                            {q.is_highest && (
+                              <span className="ml-2 rounded-sm bg-[var(--color-brass)]/15 px-1.5 py-0.5 text-xs text-[var(--color-green-deep)]">
+                                highest
+                              </span>
+                            )}
+                            <span className="ml-2 text-xs text-[var(--color-ink-soft)]">
+                              {q.institution ?? "—"}
+                              {q.year_awarded ? ` · ${q.year_awarded}` : ""}
+                            </span>
+                          </div>
+                          <form action={deleteQualification}>
+                            <input type="hidden" name="id" value={q.id} />
+                            <input type="hidden" name="staff_id" value={staff.id} />
+                            <ConfirmSubmit
+                              className="text-xs text-[var(--color-clay)] hover:underline"
+                              message={`Remove "${q.qualification}" from this record?`}
+                            >
+                              Remove
+                            </ConfirmSubmit>
+                          </form>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <form action={addQualification} className="flex flex-wrap items-center gap-2">
+                  <input type="hidden" name="staff_id" value={staff.id} />
+                  <input
+                    name="qualification"
+                    required
+                    placeholder="e.g. PhD"
+                    className="w-32 rounded-sm border border-[var(--color-line)] bg-white px-3 py-1.5 text-sm"
+                  />
+                  <input
+                    name="discipline"
+                    placeholder="Discipline"
+                    className="min-w-40 flex-1 rounded-sm border border-[var(--color-line)] bg-white px-3 py-1.5 text-sm"
+                  />
+                  <input
+                    name="institution"
+                    placeholder="Institution"
+                    className="min-w-40 flex-1 rounded-sm border border-[var(--color-line)] bg-white px-3 py-1.5 text-sm"
+                  />
+                  <input
+                    name="year_awarded"
+                    type="number"
+                    placeholder="Year"
+                    className="w-24 rounded-sm border border-[var(--color-line)] bg-white px-3 py-1.5 text-sm"
+                  />
+                  <label className="flex items-center gap-1 text-xs text-[var(--color-ink-soft)]">
+                    <input type="checkbox" name="is_highest" /> Highest
+                  </label>
+                  <button
+                    type="submit"
+                    className="rounded-sm bg-[var(--color-green-deep)] px-3 py-1.5 text-sm font-medium text-[var(--color-paper)]"
+                  >
+                    Add
+                  </button>
+                </form>
+              </div>
             ),
           },
           {
             label: "Leave",
             content: (
-              <EmptyModuleNote text="Leave history and pending requests will appear here once the Leave module is built (Phase 2)." />
+              leaveHistory.length === 0 ? (
+                <p className="text-sm text-[var(--color-ink-soft)]">No leave requests on record.</p>
+              ) : (
+                <div className="overflow-hidden rounded-sm border border-[var(--color-line)]">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-[var(--color-line)] bg-[var(--color-surface)] text-left text-xs uppercase tracking-wide text-[var(--color-ink-soft)]">
+                        <th className="px-4 py-2.5 font-medium">Type</th>
+                        <th className="px-4 py-2.5 font-medium">From</th>
+                        <th className="px-4 py-2.5 font-medium">To</th>
+                        <th className="px-4 py-2.5 font-medium">Days</th>
+                        <th className="px-4 py-2.5 font-medium">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {leaveHistory.map((l) => (
+                        <tr key={l.id} className="border-b border-[var(--color-line)] last:border-0">
+                          <td className="px-4 py-2">{l.leave_type?.name ?? "—"}</td>
+                          <td className="px-4 py-2 text-[var(--color-ink-soft)]">{l.start_date}</td>
+                          <td className="px-4 py-2 text-[var(--color-ink-soft)]">{l.end_date}</td>
+                          <td className="px-4 py-2">{l.days_requested}</td>
+                          <td className="px-4 py-2 text-[var(--color-ink-soft)]">{l.status}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )
             ),
           },
           {
@@ -175,7 +290,24 @@ export default async function StaffProfilePage({
           {
             label: "History",
             content: (
-              <EmptyModuleNote text="A full audit trail of changes to this record will appear here, drawn from audit_logs." />
+              auditTrail.length === 0 ? (
+                <p className="text-sm text-[var(--color-ink-soft)]">
+                  No audit entries for this record, or you do not hold VIEW_AUDIT_LOG.
+                </p>
+              ) : (
+                <ul className="rounded-sm border border-[var(--color-line)] bg-white/50 p-3">
+                  {auditTrail.map((entry) => (
+                    <li key={entry.id} className="border-b border-[var(--color-line)] py-2 text-sm last:border-0">
+                      <span className="font-medium">{entry.action}</span>
+                      <span className="ml-2 text-xs text-[var(--color-ink-soft)]">
+                        {entry.actor?.full_name ?? "Unknown"}
+                        {entry.actor_role ? ` (${entry.actor_role})` : ""}
+                        {` · ${new Date(entry.created_at).toLocaleString()}`}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )
             ),
           },
         ]}

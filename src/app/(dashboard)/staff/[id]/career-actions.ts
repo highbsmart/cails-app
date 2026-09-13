@@ -112,3 +112,55 @@ export async function saveAppraisal(formData: FormData) {
   revalidatePath(`/staff/${staffId}`);
   redirect(`/staff/${staffId}`);
 }
+
+export async function addQualification(formData: FormData) {
+  const staffId = String(formData.get("staff_id") ?? "");
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const year = formData.get("year_awarded");
+
+  const { error } = await supabase.from("staff_qualifications").insert({
+    staff_id: staffId,
+    qualification: String(formData.get("qualification") ?? "").trim(),
+    discipline: String(formData.get("discipline") ?? "").trim() || null,
+    institution: String(formData.get("institution") ?? "").trim() || null,
+    year_awarded: year ? Number(year) : null,
+    is_highest: formData.get("is_highest") === "on",
+    created_by: user?.id,
+  });
+
+  if (error) {
+    redirect(`/staff/${staffId}?qualError=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath(`/staff/${staffId}`);
+  redirect(`/staff/${staffId}`);
+}
+
+export async function deleteQualification(formData: FormData) {
+  const staffId = String(formData.get("staff_id") ?? "");
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("staff_qualifications")
+    .delete()
+    .eq("id", String(formData.get("id") ?? ""))
+    .select("id");
+
+  if (error) {
+    redirect(`/staff/${staffId}?qualError=${encodeURIComponent(error.message)}`);
+  }
+  if (!data || data.length === 0) {
+    redirect(
+      `/staff/${staffId}?qualError=${encodeURIComponent(
+        "Nothing was removed — you may not have permission to edit this record."
+      )}`
+    );
+  }
+
+  revalidatePath(`/staff/${staffId}`);
+  redirect(`/staff/${staffId}`);
+}

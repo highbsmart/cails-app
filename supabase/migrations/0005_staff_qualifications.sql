@@ -1,0 +1,6 @@
+-- Applied to production on 2026-09-11 as 'staff_qualifications'.
+-- Academic and professional qualifications per member of staff. Policies
+-- mirror staff_training: VIEW_STAFF to read (institution or department
+-- scope), EDIT_STAFF to write, and everyone can see their own.
+-- The HR overview and the Leave and History tabs needed no schema change --
+-- staff_leave and audit_logs already existed and were simply unread.
