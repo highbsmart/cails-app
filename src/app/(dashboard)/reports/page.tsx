@@ -4,6 +4,7 @@ import { listAcademicSessions } from "@/lib/academic";
 import { ProfileTabs } from "@/components/ProfileTabs";
 import { NoAccess } from "@/components/NoAccess";
 import { currentUserCan } from "@/lib/staff";
+import { LabeledField } from "@/components/LabeledField";
 
 const input =
   "rounded-sm border border-[var(--color-line)] bg-white px-3 py-1.5 text-sm focus:outline-none focus:border-[var(--color-brass)]";
@@ -63,9 +64,9 @@ export default async function ReportsPage({
                 </div>
 
                 {key === "grade-distribution" && (
-                  <form className="flex flex-wrap items-center gap-2">
+                  <form className="flex flex-wrap items-end gap-2">
                     <input type="hidden" name="report" value={key} />
-                    <select name="session" defaultValue={session ?? "all"} className={`${input} w-52`}>
+                    <LabeledField label="Academic session"><select name="session" defaultValue={session ?? "all"} className={`${input} w-52`}>
                       <option value="all">All sessions</option>
                       {sessions.map((s) => (
                         <option key={s.id} value={s.id}>
@@ -73,7 +74,7 @@ export default async function ReportsPage({
                           {s.is_current ? " (current)" : ""}
                         </option>
                       ))}
-                    </select>
+                    </select></LabeledField>
                     <button
                       type="submit"
                       className="rounded-sm border border-[var(--color-line)] px-3 py-1.5 text-sm text-[var(--color-green-deep)] hover:bg-[var(--color-surface)]"

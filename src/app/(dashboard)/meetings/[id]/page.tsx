@@ -19,6 +19,7 @@ import { ProfileTabs } from "@/components/ProfileTabs";
 import { ConfirmSubmit } from "@/components/ConfirmSubmit";
 import { DocumentPanel } from "@/components/DocumentPanel";
 import {
+import { LabeledField } from "@/components/LabeledField";
   updateMeeting,
   deleteMeeting,
   addAgendaItem,
@@ -128,36 +129,36 @@ export default async function MeetingPage({
                             <p className="mb-1.5 text-xs text-[var(--color-ink-soft)]">{item.description}</p>
                           )}
                           {canManage ? (
-                            <div className="flex flex-wrap items-center gap-2">
-                              <form action={updateAgendaItem} className="flex flex-1 flex-wrap items-center gap-2">
+                            <div className="flex flex-wrap items-end gap-2">
+                              <form action={updateAgendaItem} className="flex flex-1 flex-wrap items-end gap-2">
                                 <input type="hidden" name="id" value={item.id} />
                                 <input type="hidden" name="meeting_id" value={meeting.id} />
-                                <input
+                                <LabeledField label="Agenda item" className="min-w-40 flex-1"><input
                                   name="title"
                                   defaultValue={item.title}
                                   required
-                                  className={`${input} min-w-40 flex-1`}
-                                />
-                                <input
+                                  className={`${input} w-full`}
+                                /></LabeledField>
+                                <LabeledField label="No."><input
                                   name="item_order"
                                   type="number"
                                   min={1}
                                   defaultValue={item.item_order}
                                   className={`${input} w-16`}
-                                />
-                                <select name="status" defaultValue={item.status} className={`${input} w-32`}>
+                                /></LabeledField>
+                                <LabeledField label="Item status"><select name="status" defaultValue={item.status} className={`${input} w-32`}>
                                   {AGENDA_STATUSES.map((s) => (
                                     <option key={s} value={s}>
                                       {s}
                                     </option>
                                   ))}
-                                </select>
-                                <input
+                                </select></LabeledField>
+                                <LabeledField label="Resolution / decision" className="min-w-48 flex-1"><input
                                   name="resolution"
                                   defaultValue={item.resolution ?? ""}
                                   placeholder="Resolution / decision"
-                                  className={`${input} min-w-48 flex-1`}
-                                />
+                                  className={`${input} w-full`}
+                                /></LabeledField>
                                 <button type="submit" className={saveBtn}>
                                   Save
                                 </button>
@@ -183,25 +184,25 @@ export default async function MeetingPage({
                 </div>
 
                 {canManage && (
-                  <form action={addAgendaItem} className="flex flex-wrap items-center gap-2">
+                  <form action={addAgendaItem} className="flex flex-wrap items-end gap-2">
                     <input type="hidden" name="meeting_id" value={meeting.id} />
-                    <input
+                    <LabeledField label="No."><input
                       name="item_order"
                       type="number"
                       min={1}
                       defaultValue={agenda.length + 1}
                       className={`${input} w-16`}
-                    />
-                    <input name="title" required placeholder="Agenda item" className={`${input} min-w-48 flex-1`} />
-                    <input name="description" placeholder="Notes (optional)" className={`${input} min-w-40 flex-1`} />
-                    <select name="presenter_id" defaultValue="" className={`${input} w-48`}>
+                    /></LabeledField>
+                    <LabeledField label="Agenda item" className="min-w-48 flex-1"><input name="title" required placeholder="Agenda item" className={`${input} w-full`} /></LabeledField>
+                    <LabeledField label="Notes" className="min-w-40 flex-1"><input name="description" placeholder="Notes (optional)" className={`${input} w-full`} /></LabeledField>
+                    <LabeledField label="Presenter"><select name="presenter_id" defaultValue="" className={`${input} w-48`}>
                       <option value="">No presenter</option>
                       {staff.map((s) => (
                         <option key={s.id} value={s.id}>
                           {s.first_name} {s.surname}
                         </option>
                       ))}
-                    </select>
+                    </select></LabeledField>
                     <button type="submit" className="rounded-sm bg-[var(--color-green-deep)] px-3 py-1.5 text-sm font-medium text-[var(--color-paper)]">
                       Add
                     </button>
@@ -264,9 +265,9 @@ export default async function MeetingPage({
                 </div>
 
                 {canManage && (
-                  <form action={addAttendee} className="flex flex-wrap items-center gap-2">
+                  <form action={addAttendee} className="flex flex-wrap items-end gap-2">
                     <input type="hidden" name="meeting_id" value={meeting.id} />
-                    <select name="staff_id" defaultValue="" className={`${input} min-w-48 flex-1`}>
+                    <LabeledField label="Staff member" className="min-w-48 flex-1"><select name="staff_id" defaultValue="" className={`${input} w-full`}>
                       <option value="">— staff member —</option>
                       {staff.map((s) => (
                         <option key={s.id} value={s.id}>
@@ -274,15 +275,15 @@ export default async function MeetingPage({
                           {s.rank ? ` (${s.rank})` : ""}
                         </option>
                       ))}
-                    </select>
-                    <input name="guest_name" placeholder="or a guest's name" className={`${input} min-w-40 flex-1`} />
-                    <select name="status" defaultValue="present" className={`${input} w-32`}>
+                    </select></LabeledField>
+                    <LabeledField label="Or guest name" className="min-w-40 flex-1"><input name="guest_name" placeholder="or a guest's name" className={`${input} w-full`} /></LabeledField>
+                    <LabeledField label="Attendance"><select name="status" defaultValue="present" className={`${input} w-32`}>
                       {ATTENDANCE_STATUSES.map((s) => (
                         <option key={s} value={s}>
                           {s}
                         </option>
                       ))}
-                    </select>
+                    </select></LabeledField>
                     <button type="submit" className="rounded-sm bg-[var(--color-green-deep)] px-3 py-1.5 text-sm font-medium text-[var(--color-paper)]">
                       Add
                     </button>
@@ -327,7 +328,7 @@ export default async function MeetingPage({
                 )}
 
                 {canManage && !adopted && (
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-end gap-2">
                     <form action={advanceMinutes}>
                       <input type="hidden" name="id" value={meeting.id} />
                       <input type="hidden" name="target" value="circulated" />

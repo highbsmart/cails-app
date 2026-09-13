@@ -15,6 +15,7 @@ import { ProfileTabs } from "@/components/ProfileTabs";
 import { ConfirmSubmit } from "@/components/ConfirmSubmit";
 import { DocumentPanel } from "@/components/DocumentPanel";
 import { updateStudent, archiveStudent, registerCourse, unregisterCourse } from "../actions";
+import { LabeledField } from "@/components/LabeledField";
 
 const input =
   "w-full rounded-sm border border-[var(--color-line)] bg-white px-3 py-2 text-sm focus:outline-none focus:border-[var(--color-brass)]";
@@ -204,9 +205,9 @@ export default async function StudentProfilePage({
                 </div>
 
                 {canManage && (
-                  <form action={registerCourse} className="flex flex-wrap items-center gap-2">
+                  <form action={registerCourse} className="flex flex-wrap items-end gap-2">
                     <input type="hidden" name="student_id" value={student.id} />
-                    <select name="course_id" required defaultValue="" className={`${smallInput} min-w-56 flex-1`}>
+                    <LabeledField label="Course"><select name="course_id" required defaultValue="" className={`${smallInput} min-w-56 flex-1`}>
                       <option value="" disabled>
                         Select a course…
                       </option>
@@ -215,8 +216,8 @@ export default async function StudentProfilePage({
                           {c.code} — {c.title}
                         </option>
                       ))}
-                    </select>
-                    <select
+                    </select></LabeledField>
+                    <LabeledField label="Session"><select
                       name="academic_session_id"
                       required
                       defaultValue={currentSession?.id ?? ""}
@@ -231,7 +232,7 @@ export default async function StudentProfilePage({
                           {s.is_current ? " (current)" : ""}
                         </option>
                       ))}
-                    </select>
+                    </select></LabeledField>
                     <button type="submit" className="rounded-sm bg-[var(--color-green-deep)] px-3 py-1.5 text-sm font-medium text-[var(--color-paper)]">
                       Register
                     </button>

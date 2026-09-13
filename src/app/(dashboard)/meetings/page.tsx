@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { listMeetings, formatMeetingDate, MEETING_TYPES, MEETING_STATUSES } from "@/lib/meetings";
 import { currentUserCan } from "@/lib/staff";
+import { LabeledField } from "@/components/LabeledField";
 
 const input =
   "rounded-sm border border-[var(--color-line)] bg-white px-3 py-1.5 text-sm focus:outline-none focus:border-[var(--color-brass)]";
@@ -43,24 +44,24 @@ export default async function MeetingsPage({
         </p>
       )}
 
-      <form className="flex flex-wrap items-center gap-2">
+      <form className="flex flex-wrap items-end gap-2">
         <input name="q" defaultValue={q ?? ""} placeholder="Search titles…" className={`${input} min-w-48 flex-1`} />
-        <select name="type" defaultValue={type ?? "all"} className={`${input} w-44`}>
+        <LabeledField label="Meeting type"><select name="type" defaultValue={type ?? "all"} className={`${input} w-44`}>
           <option value="all">All types</option>
           {MEETING_TYPES.map((t) => (
             <option key={t} value={t}>
               {t.replace("_", " ")}
             </option>
           ))}
-        </select>
-        <select name="status" defaultValue={status ?? "all"} className={`${input} w-40`}>
+        </select></LabeledField>
+        <LabeledField label="Status"><select name="status" defaultValue={status ?? "all"} className={`${input} w-40`}>
           <option value="all">All statuses</option>
           {MEETING_STATUSES.map((s) => (
             <option key={s} value={s}>
               {s}
             </option>
           ))}
-        </select>
+        </select></LabeledField>
         <button
           type="submit"
           className="rounded-sm border border-[var(--color-green-deep)]/40 px-3 py-1.5 text-sm font-medium text-[var(--color-green-deep)] hover:bg-[var(--color-green-deep)]/5"

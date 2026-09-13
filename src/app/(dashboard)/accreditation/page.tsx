@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { listCategories, listEvidence, computeReadiness } from "@/lib/accreditation";
 import { updateEvidenceStatus } from "./actions";
+import { LabeledField } from "@/components/LabeledField";
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-[var(--color-ink-soft)]/15 text-[var(--color-ink-soft)]",
@@ -101,7 +102,7 @@ export default async function AccreditationPage({
                   )}
                   <form action={updateEvidenceStatus} className="mt-2 flex items-center gap-2">
                     <input type="hidden" name="id" value={e.id} />
-                    <select
+                    <LabeledField label="Status"><select
                       name="status"
                       defaultValue={e.status}
                       className="rounded-sm border border-[var(--color-line)] bg-white px-2 py-1 text-xs focus:outline-none"
@@ -109,7 +110,7 @@ export default async function AccreditationPage({
                       <option value="pending">Pending</option>
                       <option value="collected">Collected</option>
                       <option value="verified">Verified</option>
-                    </select>
+                    </select></LabeledField>
                     <button
                       type="submit"
                       className="rounded-sm bg-[var(--color-green-deep)] px-2.5 py-1 text-xs font-medium text-[var(--color-paper)]"

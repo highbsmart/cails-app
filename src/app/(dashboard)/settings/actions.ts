@@ -27,8 +27,31 @@ async function requireAdmin(perm: string, tab: string) {
   return supabase;
 }
 
+/** Constraint names mean nothing to an administrator; say what actually happened. */
+function explain(message: string): string {
+  if (message.includes("offices_name_key")) {
+    return "An office with that exact name already exists. Office names have to be unique — check the list above, or give this one a more specific name.";
+  }
+  if (message.includes("schools_name_key")) {
+    return "A school with that name already exists.";
+  }
+  if (message.includes("offices_no_self_report")) {
+    return "An office cannot report to itself.";
+  }
+  if (message.includes("duplicate key")) {
+    return "That entry already exists.";
+  }
+  if (message.includes("row-level security")) {
+    return "You do not have permission to make that change.";
+  }
+  if (message.includes("violates not-null")) {
+    return "A required field was left blank.";
+  }
+  return message;
+}
+
 function fail(tab: string, message: string): never {
-  redirect(`/settings?tab=${tab}&error=` + encodeURIComponent(message));
+  redirect(`/settings?tab=${tab}&error=` + encodeURIComponent(explain(message)));
 }
 
 function done(tab: string): never {

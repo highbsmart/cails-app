@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import { listStudents, STUDENT_STATUSES } from "@/lib/students";
 import { listProgrammes } from "@/lib/academic";
 import { currentUserCan } from "@/lib/staff";
+import { LabeledField } from "@/components/LabeledField";
 
 const input =
   "rounded-sm border border-[var(--color-line)] bg-white px-3 py-1.5 text-sm focus:outline-none focus:border-[var(--color-brass)]";
@@ -45,29 +46,29 @@ export default async function StudentsPage({
         </p>
       )}
 
-      <form className="flex flex-wrap items-center gap-2">
+      <form className="flex flex-wrap items-end gap-2">
         <input
           name="q"
           defaultValue={q ?? ""}
           placeholder="Matric number or name…"
           className={`${input} min-w-48 flex-1`}
         />
-        <select name="programme" defaultValue={programme ?? "all"} className={`${input} w-52`}>
+        <LabeledField label="Programme"><select name="programme" defaultValue={programme ?? "all"} className={`${input} w-52`}>
           <option value="all">All programmes</option>
           {programmes.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
             </option>
           ))}
-        </select>
-        <select name="status" defaultValue={status ?? "all"} className={`${input} w-40`}>
+        </select></LabeledField>
+        <LabeledField label="Status"><select name="status" defaultValue={status ?? "all"} className={`${input} w-40`}>
           <option value="all">All statuses</option>
           {STUDENT_STATUSES.map((s) => (
             <option key={s} value={s}>
               {s}
             </option>
           ))}
-        </select>
+        </select></LabeledField>
         <button
           type="submit"
           className="rounded-sm border border-[var(--color-green-deep)]/40 px-3 py-1.5 text-sm font-medium text-[var(--color-green-deep)] hover:bg-[var(--color-green-deep)]/5"

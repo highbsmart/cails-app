@@ -15,6 +15,7 @@ import { NoAccess } from "@/components/NoAccess";
 import { currentUserCanAny } from "@/lib/staff";
 import { ConfirmSubmit } from "@/components/ConfirmSubmit";
 import {
+import { LabeledField } from "@/components/LabeledField";
   assignRole,
   updateUserRole,
   revokeRole,
@@ -103,7 +104,10 @@ export default async function SettingsPage({
       </div>
 
       {error && (
-        <p className="rounded-sm border border-[var(--color-clay)]/30 bg-[var(--color-clay)]/10 px-3 py-2 text-sm text-[var(--color-clay)]">
+        <p
+          id="settings-error"
+          className="scroll-mt-6 rounded-sm border-2 border-[var(--color-clay)]/50 bg-[var(--color-clay)]/10 px-3 py-2.5 text-sm font-medium text-[var(--color-clay)]"
+        >
           {error}
         </p>
       )}
@@ -136,29 +140,29 @@ export default async function SettingsPage({
                               </span>
                             )}
                           </div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <form action={updateUserRole} className="flex flex-1 flex-wrap items-center gap-2">
+                          <div className="flex flex-wrap items-end gap-2">
+                            <form action={updateUserRole} className="flex flex-1 flex-wrap items-end gap-2">
                               <input type="hidden" name="id" value={a.id} />
-                              <select name="role_id" defaultValue={a.role_id ?? ""} className={`${input} min-w-44 flex-1`}>
+                              <LabeledField label="Role" className="min-w-44 flex-1"><select name="role_id" defaultValue={a.role_id ?? ""} className={`${input} w-full`}>
                                 {roles.map((r) => (
                                   <option key={r.id} value={r.id}>
                                     {r.name}
                                   </option>
                                 ))}
-                              </select>
-                              <select name="scope_type" defaultValue={a.scope_type} className={`${input} w-40`}>
+                              </select></LabeledField>
+                              <LabeledField label="Scope"><select name="scope_type" defaultValue={a.scope_type} className={`${input} w-40`}>
                                 <option value="institution">Institution-wide</option>
                                 <option value="school">School</option>
                                 <option value="department">Department</option>
-                              </select>
-                              <select name="office_id" defaultValue={a.office_id ?? ""} className={`${input} w-44`}>
+                              </select></LabeledField>
+                              <LabeledField label="Office"><select name="office_id" defaultValue={a.office_id ?? ""} className={`${input} w-44`}>
                                 <option value="">No office</option>
                                 {offices.map((o) => (
                                   <option key={o.id} value={o.id}>
                                     {o.name}
                                   </option>
                                 ))}
-                              </select>
+                              </select></LabeledField>
                               <button type="submit" className={saveBtn}>
                                 Save
                               </button>
@@ -272,15 +276,15 @@ export default async function SettingsPage({
                   <ul>
                     {schools.map((s) => (
                       <Row key={s.id} inactive={!s.is_active}>
-                        <form action={updateSchool} className="flex flex-1 flex-wrap items-center gap-2">
+                        <form action={updateSchool} className="flex flex-1 flex-wrap items-end gap-2">
                           <input type="hidden" name="id" value={s.id} />
-                          <input name="name" defaultValue={s.name} required className={`${input} min-w-40 flex-1`} />
-                          <input
+                          <LabeledField label="School name" className="min-w-40 flex-1"><input name="name" defaultValue={s.name} required className={`${input} w-full`} /></LabeledField>
+                          <LabeledField label="Short name"><input
                             name="short_name"
                             defaultValue={s.short_name ?? ""}
                             placeholder="Short name"
                             className={`${input} w-32`}
-                          />
+                          /></LabeledField>
                           <button type="submit" className={saveBtn}>
                             Save
                           </button>
@@ -294,9 +298,9 @@ export default async function SettingsPage({
                       </Row>
                     ))}
                   </ul>
-                  <form action={createSchool} className="flex gap-2 pt-3">
-                    <input name="name" placeholder="School name" required className={`${input} flex-1`} />
-                    <input name="short_name" placeholder="Short name" className={`${input} w-32`} />
+                  <form action={createSchool} className="flex flex-wrap items-end gap-2 pt-3">
+                    <LabeledField label="School name" className="flex-1"><input name="name" placeholder="School name" required className={`${input} w-full`} /></LabeledField>
+                    <LabeledField label="Short name"><input name="short_name" placeholder="Short name" className={`${input} w-32`} /></LabeledField>
                     <button type="submit" className={primaryBtn}>
                       Add
                     </button>
@@ -307,17 +311,17 @@ export default async function SettingsPage({
                   <ul>
                     {departments.map((d) => (
                       <Row key={d.id} inactive={!d.is_active}>
-                        <form action={updateDepartment} className="flex flex-1 flex-wrap items-center gap-2">
+                        <form action={updateDepartment} className="flex flex-1 flex-wrap items-end gap-2">
                           <input type="hidden" name="id" value={d.id} />
-                          <input name="name" defaultValue={d.name} required className={`${input} min-w-40 flex-1`} />
-                          <select name="school_id" defaultValue={d.school_id ?? ""} className={`${input} w-48`}>
+                          <LabeledField label="Department name" className="min-w-40 flex-1"><input name="name" defaultValue={d.name} required className={`${input} w-full`} /></LabeledField>
+                          <LabeledField label="School"><select name="school_id" defaultValue={d.school_id ?? ""} className={`${input} w-48`}>
                             <option value="">No school</option>
                             {schools.map((s) => (
                               <option key={s.id} value={s.id}>
                                 {s.name}
                               </option>
                             ))}
-                          </select>
+                          </select></LabeledField>
                           <button type="submit" className={saveBtn}>
                             Save
                           </button>
@@ -331,16 +335,16 @@ export default async function SettingsPage({
                       </Row>
                     ))}
                   </ul>
-                  <form action={createDepartment} className="flex gap-2 pt-3">
-                    <input name="name" placeholder="Department name" required className={`${input} flex-1`} />
-                    <select name="school_id" className={`${input} w-48`}>
+                  <form action={createDepartment} className="flex flex-wrap items-end gap-2 pt-3">
+                    <LabeledField label="Department name" className="flex-1"><input name="name" placeholder="Department name" required className={`${input} w-full`} /></LabeledField>
+                    <LabeledField label="School"><select name="school_id" className={`${input} w-48`}>
                       <option value="">No school</option>
                       {schools.map((s) => (
                         <option key={s.id} value={s.id}>
                           {s.name}
                         </option>
                       ))}
-                    </select>
+                    </select></LabeledField>
                     <button type="submit" className={primaryBtn}>
                       Add
                     </button>
@@ -351,10 +355,10 @@ export default async function SettingsPage({
                   <ul>
                     {offices.map((o) => (
                       <Row key={o.id} inactive={!o.is_active}>
-                        <form action={updateOffice} className="flex flex-1 flex-wrap items-center gap-2">
+                        <form action={updateOffice} className="flex flex-1 flex-wrap items-end gap-2">
                           <input type="hidden" name="id" value={o.id} />
-                          <input name="name" defaultValue={o.name} required className={`${input} min-w-40 flex-1`} />
-                          <select
+                          <LabeledField label="Office name" className="min-w-40 flex-1"><input name="name" defaultValue={o.name} required className={`${input} w-full`} /></LabeledField>
+                          <LabeledField label="Reports to"><select
                             name="reports_to_office_id"
                             defaultValue={o.reports_to_office_id ?? ""}
                             className={`${input} w-48`}
@@ -367,12 +371,12 @@ export default async function SettingsPage({
                                   {other.name}
                                 </option>
                               ))}
-                          </select>
-                          <select name="scope_type" defaultValue={o.scope_type ?? "institution"} className={`${input} w-36`}>
+                          </select></LabeledField>
+                          <LabeledField label="Scope"><select name="scope_type" defaultValue={o.scope_type ?? "institution"} className={`${input} w-36`}>
                             <option value="institution">Institution</option>
                             <option value="school">School</option>
                             <option value="department">Department</option>
-                          </select>
+                          </select></LabeledField>
                           <button type="submit" className={saveBtn}>
                             Save
                           </button>
@@ -386,16 +390,25 @@ export default async function SettingsPage({
                       </Row>
                     ))}
                   </ul>
-                  <form action={createOffice} className="flex flex-wrap gap-2 pt-3">
-                    <input name="name" placeholder="Office name" required className={`${input} flex-1`} />
-                    <select name="reports_to_office_id" className={`${input} w-48`}>
-                      <option value="">No superior</option>
-                      {offices.map((o) => (
-                        <option key={o.id} value={o.id}>
-                          {o.name}
-                        </option>
-                      ))}
-                    </select>
+                  <form action={createOffice} className="flex flex-wrap items-end gap-2 pt-3">
+                    <LabeledField label="New office / designation" className="min-w-48 flex-1">
+                      <input
+                        name="name"
+                        placeholder="e.g. Director, Quality Assurance"
+                        required
+                        className={`${input} w-full`}
+                      />
+                    </LabeledField>
+                    <LabeledField label="Reports to">
+                      <select name="reports_to_office_id" className={`${input} w-48`}>
+                        <option value="">No superior</option>
+                        {offices.map((o) => (
+                          <option key={o.id} value={o.id}>
+                            {o.name}
+                          </option>
+                        ))}
+                      </select>
+                    </LabeledField>
                     <button type="submit" className={primaryBtn}>
                       Add
                     </button>
@@ -412,17 +425,17 @@ export default async function SettingsPage({
                   <ul>
                     {numberingRules.map((r) => (
                       <Row key={r.id}>
-                        <form action={updateNumberingRule} className="flex flex-1 flex-wrap items-center gap-2">
+                        <form action={updateNumberingRule} className="flex flex-1 flex-wrap items-end gap-2">
                           <input type="hidden" name="id" value={r.id} />
-                          <select name="office_id" defaultValue={r.office_id ?? ""} className={`${input} w-44`}>
+                          <LabeledField label="Office"><select name="office_id" defaultValue={r.office_id ?? ""} className={`${input} w-44`}>
                             <option value="">Default (fallback)</option>
                             {offices.map((o) => (
                               <option key={o.id} value={o.id}>
                                 {o.name}
                               </option>
                             ))}
-                          </select>
-                          <input name="prefix" defaultValue={r.prefix} required className={`${input} min-w-32 flex-1`} />
+                          </select></LabeledField>
+                          <LabeledField label="Prefix" className="min-w-32 flex-1"><input name="prefix" defaultValue={r.prefix} required className={`${input} w-full`} /></LabeledField>
                           <label className="text-xs text-[var(--color-ink-soft)]">
                             Year
                             <input
@@ -454,16 +467,16 @@ export default async function SettingsPage({
                       </Row>
                     ))}
                   </ul>
-                  <form action={createNumberingRule} className="flex gap-2 pt-3">
-                    <select name="office_id" className={`${input} w-44`}>
+                  <form action={createNumberingRule} className="flex flex-wrap items-end gap-2 pt-3">
+                    <LabeledField label="Office"><select name="office_id" className={`${input} w-44`}>
                       <option value="">Default (fallback)</option>
                       {offices.map((o) => (
                         <option key={o.id} value={o.id}>
                           {o.name}
                         </option>
                       ))}
-                    </select>
-                    <input name="prefix" placeholder="e.g. CAILS/LIB" required className={`${input} flex-1`} />
+                    </select></LabeledField>
+                    <LabeledField label="Prefix" className="flex-1"><input name="prefix" placeholder="e.g. CAILS/LIB" required className={`${input} w-full`} /></LabeledField>
                     <button type="submit" className={primaryBtn}>
                       Add
                     </button>
@@ -474,29 +487,29 @@ export default async function SettingsPage({
                   <ul>
                     {gradeBands.map((g) => (
                       <Row key={g.id} inactive={!g.is_active}>
-                        <form action={updateGradeBand} className="flex flex-1 flex-wrap items-center gap-2">
+                        <form action={updateGradeBand} className="flex flex-1 flex-wrap items-end gap-2">
                           <input type="hidden" name="id" value={g.id} />
-                          <input name="grade" defaultValue={g.grade} required className={`${input} w-20`} />
-                          <input
+                          <LabeledField label="Grade"><input name="grade" defaultValue={g.grade} required className={`${input} w-20`} /></LabeledField>
+                          <LabeledField label="Min score"><input
                             name="min_score"
                             type="number"
                             defaultValue={g.min_score}
                             required
                             className={`${input} w-24`}
-                          />
-                          <input
+                          /></LabeledField>
+                          <LabeledField label="Max score"><input
                             name="max_score"
                             type="number"
                             defaultValue={g.max_score}
                             required
                             className={`${input} w-24`}
-                          />
-                          <input
+                          /></LabeledField>
+                          <LabeledField label="Remark" className="min-w-32 flex-1"><input
                             name="remark"
                             defaultValue={g.remark ?? ""}
                             placeholder="Remark"
-                            className={`${input} min-w-32 flex-1`}
-                          />
+                            className={`${input} w-full`}
+                          /></LabeledField>
                           <button type="submit" className={saveBtn}>
                             Save
                           </button>
@@ -510,11 +523,11 @@ export default async function SettingsPage({
                       </Row>
                     ))}
                   </ul>
-                  <form action={createGradeBand} className="flex flex-wrap gap-2 pt-3">
-                    <input name="grade" placeholder="Grade" required className={`${input} w-20`} />
-                    <input name="min_score" type="number" placeholder="Min" required className={`${input} w-24`} />
-                    <input name="max_score" type="number" placeholder="Max" required className={`${input} w-24`} />
-                    <input name="remark" placeholder="Remark" className={`${input} flex-1`} />
+                  <form action={createGradeBand} className="flex flex-wrap items-end gap-2 pt-3">
+                    <LabeledField label="Grade"><input name="grade" placeholder="Grade" required className={`${input} w-20`} /></LabeledField>
+                    <LabeledField label="Min score"><input name="min_score" type="number" placeholder="Min" required className={`${input} w-24`} /></LabeledField>
+                    <LabeledField label="Max score"><input name="max_score" type="number" placeholder="Max" required className={`${input} w-24`} /></LabeledField>
+                    <LabeledField label="Remark" className="flex-1"><input name="remark" placeholder="Remark" className={`${input} w-full`} /></LabeledField>
                     <button type="submit" className={primaryBtn}>
                       Add
                     </button>
@@ -531,17 +544,17 @@ export default async function SettingsPage({
                   <ul>
                     {leaveTypes.map((l) => (
                       <Row key={l.id} inactive={!l.is_active}>
-                        <form action={updateLeaveType} className="flex flex-1 flex-wrap items-center gap-2">
+                        <form action={updateLeaveType} className="flex flex-1 flex-wrap items-end gap-2">
                           <input type="hidden" name="id" value={l.id} />
-                          <input name="name" defaultValue={l.name} required className={`${input} min-w-40 flex-1`} />
+                          <LabeledField label="Leave type" className="min-w-40 flex-1"><input name="name" defaultValue={l.name} required className={`${input} w-full`} /></LabeledField>
                           <label className="text-xs text-[var(--color-ink-soft)]">
                             Max days/yr
-                            <input
+                            <LabeledField label="Max days/yr"><input
                               name="max_days_per_year"
                               type="number"
                               defaultValue={l.max_days_per_year ?? ""}
                               className={`${input} ml-1 w-24`}
-                            />
+                            /></LabeledField>
                           </label>
                           <label className="flex items-center gap-1 text-xs text-[var(--color-ink-soft)]">
                             <input type="checkbox" name="requires_document" defaultChecked={l.requires_document} />
@@ -560,9 +573,9 @@ export default async function SettingsPage({
                       </Row>
                     ))}
                   </ul>
-                  <form action={createLeaveTypeAction} className="flex flex-wrap items-center gap-2 pt-3">
-                    <input name="name" placeholder="Leave type name" required className={`${input} flex-1`} />
-                    <input name="max_days_per_year" type="number" placeholder="Max days/yr" className={`${input} w-32`} />
+                  <form action={createLeaveTypeAction} className="flex flex-wrap items-end gap-2 pt-3">
+                    <LabeledField label="Leave type" className="flex-1"><input name="name" placeholder="Leave type name" required className={`${input} w-full`} /></LabeledField>
+                    <LabeledField label="Max days/yr"><input name="max_days_per_year" type="number" placeholder="Max days/yr" className={`${input} w-32`} /></LabeledField>
                     <label className="flex items-center gap-1 text-xs text-[var(--color-ink-soft)]">
                       <input type="checkbox" name="requires_document" /> Requires document
                     </label>
@@ -576,9 +589,9 @@ export default async function SettingsPage({
                   <ul>
                     {sessions.map((s) => (
                       <Row key={s.id}>
-                        <form action={updateAcademicSession} className="flex flex-1 flex-wrap items-center gap-2">
+                        <form action={updateAcademicSession} className="flex flex-1 flex-wrap items-end gap-2">
                           <input type="hidden" name="id" value={s.id} />
-                          <input name="name" defaultValue={s.name} required className={`${input} min-w-40 flex-1`} />
+                          <LabeledField label="Session name" className="min-w-40 flex-1"><input name="name" defaultValue={s.name} required className={`${input} w-full`} /></LabeledField>
                           {s.is_current && (
                             <span className="rounded-sm bg-[var(--color-brass)]/15 px-2 py-0.5 text-xs text-[var(--color-green-deep)]">
                               current
@@ -604,8 +617,8 @@ export default async function SettingsPage({
                       </Row>
                     ))}
                   </ul>
-                  <form action={createAcademicSessionAction} className="flex flex-wrap items-center gap-2 pt-3">
-                    <input name="name" placeholder="e.g. 2026/2027" required className={`${input} flex-1`} />
+                  <form action={createAcademicSessionAction} className="flex flex-wrap items-end gap-2 pt-3">
+                    <LabeledField label="Session name" className="flex-1"><input name="name" placeholder="e.g. 2026/2027" required className={`${input} w-full`} /></LabeledField>
                     <label className="flex items-center gap-1 text-xs text-[var(--color-ink-soft)]">
                       <input type="checkbox" name="is_current" /> Make current
                     </label>
@@ -638,7 +651,7 @@ function Panel({ title, empty, children }: { title: string; empty: boolean; chil
 function Row({ children, inactive = false }: { children: React.ReactNode; inactive?: boolean }) {
   return (
     <li
-      className={`flex flex-wrap items-center gap-2 border-b border-[var(--color-line)] py-2 last:border-0 ${
+      className={`flex flex-wrap items-end gap-2 border-b border-[var(--color-line)] py-2 last:border-0 ${
         inactive ? "opacity-50" : ""
       }`}
     >
