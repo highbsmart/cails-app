@@ -23,7 +23,11 @@ export type NavItem = {
   label: string;
   labelAr: string;
   icon: IconName;
-  requiresAnyRole?: string[]; // if omitted, visible to everyone signed in
+  // The permission the destination page actually enforces. If omitted, the
+  // page is open to anyone signed in (their own leave, their own documents).
+  // Keep these in step with the checks in the pages themselves — a menu entry
+  // that leads to a lock screen is worse than no menu entry.
+  requiresAnyPermission?: string[];
 };
 
 export const NAV_ITEMS: NavItem[] = [
@@ -33,62 +37,80 @@ export const NAV_ITEMS: NavItem[] = [
     label: "HR",
     labelAr: "الموارد البشرية",
     icon: "hr",
-    requiresAnyRole: ["SYSTEM_ADMIN", "PROVOST", "REGISTRAR", "DPREG_ESTABLISHMENT", "DPP", "HOD", "DEAN"],
+    requiresAnyPermission: ["VIEW_STAFF"],
   },
   { href: "/leave", label: "My Leave", labelAr: "الإجازات", icon: "leave" },
-  { href: "/communication", label: "Communication", labelAr: "التواصل", icon: "communication" },
+  {
+    href: "/communication",
+    label: "Communication",
+    labelAr: "التواصل",
+    icon: "communication",
+    requiresAnyPermission: ["ISSUE_MEMO", "APPROVE_MEMO"],
+  },
   {
     href: "/academic",
     label: "Academic",
     labelAr: "الشؤون الأكاديمية",
     icon: "academic",
-    requiresAnyRole: ["SYSTEM_ADMIN", "PROVOST", "DPA", "REGISTRAR", "DPREG_ACADEMIC", "DEAN", "HOD", "DIR_EXAMS"],
+    requiresAnyPermission: ["MANAGE_ACADEMIC_STRUCTURE", "VIEW_RESULTS"],
   },
   {
     href: "/staff",
     label: "Staff",
     labelAr: "الموظفون",
     icon: "staff",
-    requiresAnyRole: ["SYSTEM_ADMIN", "PROVOST", "REGISTRAR", "DPREG_ESTABLISHMENT", "DPA", "DPP", "DEAN", "HOD"],
+    requiresAnyPermission: ["VIEW_STAFF"],
   },
   {
     href: "/students",
     label: "Students",
     labelAr: "الطلاب",
     icon: "students",
-    requiresAnyRole: ["SYSTEM_ADMIN", "PROVOST", "DPA", "DEAN", "HOD", "DIR_EXAMS"],
+    requiresAnyPermission: ["VIEW_STAFF", "MANAGE_ACADEMIC_STRUCTURE"],
   },
   {
     href: "/examination",
     label: "Examination",
     labelAr: "الامتحانات",
     icon: "examination",
-    requiresAnyRole: ["SYSTEM_ADMIN", "DPA", "DIR_EXAMS", "DEAN", "HOD", "EXAMS_OFFICER", "ACADEMIC_STAFF"],
+    requiresAnyPermission: ["VIEW_RESULTS", "ENTER_RESULTS", "APPROVE_RESULTS"],
   },
   { href: "/documents", label: "Documents", labelAr: "الوثائق", icon: "documents" },
-  { href: "/meetings", label: "Meetings", labelAr: "الاجتماعات", icon: "meetings" },
+  {
+    href: "/meetings",
+    label: "Meetings",
+    labelAr: "الاجتماعات",
+    icon: "meetings",
+    requiresAnyPermission: ["MANAGE_MEETINGS"],
+  },
   { href: "/tasks", label: "Tasks", labelAr: "المهام", icon: "tasks" },
   {
     href: "/accreditation",
     label: "Accreditation",
     labelAr: "الاعتماد",
     icon: "accreditation",
-    requiresAnyRole: ["SYSTEM_ADMIN", "PROVOST", "DPA", "DAPEQA"],
+    requiresAnyPermission: ["VIEW_ACCREDITATION_VAULT", "EDIT_ACCREDITATION_VAULT"],
   },
-  { href: "/reports", label: "Reports", labelAr: "التقارير", icon: "reports" },
+  {
+    href: "/reports",
+    label: "Reports",
+    labelAr: "التقارير",
+    icon: "reports",
+    requiresAnyPermission: ["VIEW_REPORTS"],
+  },
   {
     href: "/settings",
     label: "Settings",
     labelAr: "الإعدادات",
     icon: "settings",
-    requiresAnyRole: ["SYSTEM_ADMIN"],
+    requiresAnyPermission: ["MANAGE_USERS", "CONFIGURE_ORG_UNITS", "CONFIGURE_WORKFLOWS"],
   },
 ];
 
-export function visibleNavItems(roleCodes: string[]): NavItem[] {
+export function visibleNavItems(permissionCodes: string[]): NavItem[] {
   return NAV_ITEMS.filter(
     (item) =>
-      !item.requiresAnyRole ||
-      item.requiresAnyRole.some((r) => roleCodes.includes(r))
+      !item.requiresAnyPermission ||
+      item.requiresAnyPermission.some((p) => permissionCodes.includes(p))
   );
 }

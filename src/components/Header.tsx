@@ -43,12 +43,14 @@ export function Header({ user }: { user: UserContext }) {
               {user.roleNames[0] ?? "No role assigned"}
             </p>
           </div>
-          <a
-            href="/my-record"
-            className="text-sm text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] hover:underline"
-          >
-            My Record
-          </a>
+          {user.isStudent && (
+            <a
+              href="/my-record"
+              className="text-sm text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] hover:underline"
+            >
+              My Record
+            </a>
+          )}
           <a
             href="/account"
             className="text-sm text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] hover:underline"

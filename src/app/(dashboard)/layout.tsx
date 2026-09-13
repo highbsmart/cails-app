@@ -16,7 +16,7 @@ export default async function DashboardLayout({
   // but this is the second, independent check for defense in depth.
   if (!user) redirect("/login");
 
-  const items = visibleNavItems(user.roleCodes);
+  const items = visibleNavItems(user.permissionCodes);
 
   return (
     <LanguageProvider>
