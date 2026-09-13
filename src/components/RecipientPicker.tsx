@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { OfficeOption } from "@/lib/messages";
+import { LabeledField } from "@/components/LabeledField";
 
 export function RecipientPicker({ offices }: { offices: OfficeOption[] }) {
   const [type, setType] = useState<"office" | "person">("office");
@@ -32,7 +33,7 @@ export function RecipientPicker({ offices }: { offices: OfficeOption[] }) {
       </div>
 
       {type === "office" ? (
-        <select
+        <LabeledField label="Recipient office"><select
           name="recipient_office_id"
           required
           defaultValue=""
@@ -46,7 +47,7 @@ export function RecipientPicker({ offices }: { offices: OfficeOption[] }) {
               {o.name}
             </option>
           ))}
-        </select>
+        </select></LabeledField>
       ) : (
         <input
           name="recipient_email"

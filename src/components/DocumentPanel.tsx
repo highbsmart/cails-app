@@ -6,6 +6,7 @@ import {
   type DocumentEntityType,
 } from "@/lib/documents";
 import {
+import { LabeledField } from "@/components/LabeledField";
   uploadDocument,
   updateDocument,
   deleteDocument,
@@ -57,24 +58,24 @@ export function DocumentPanel({
           <ul>
             {documents.map((doc) => (
               <li key={doc.id} className="border-b border-[var(--color-line)] py-2.5 last:border-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <form action={updateDocument} className="flex flex-1 flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-end gap-2">
+                  <form action={updateDocument} className="flex flex-1 flex-wrap items-end gap-2">
                     <input type="hidden" name="id" value={doc.id} />
                     <input type="hidden" name="return_to" value={returnTo} />
-                    <input
+                    <LabeledField label="Document title" className="min-w-44 flex-1"><input
                       name="title"
                       defaultValue={doc.title}
                       required
-                      className={`${input} min-w-44 flex-1`}
-                    />
-                    <select name="category" defaultValue={doc.category ?? ""} className={`${input} w-48`}>
+                      className={`${input} w-full`}
+                    /></LabeledField>
+                    <LabeledField label="Category"><select name="category" defaultValue={doc.category ?? ""} className={`${input} w-48`}>
                       <option value="">No category</option>
                       {DOCUMENT_CATEGORIES.map((c) => (
                         <option key={c} value={c}>
                           {c}
                         </option>
                       ))}
-                    </select>
+                    </select></LabeledField>
                     <button type="submit" className={saveBtn}>
                       Save
                     </button>
