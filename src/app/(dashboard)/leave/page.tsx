@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { listMyLeave, getLeaveWorkflowSteps, getLeaveApprovalTrail } from "@/lib/leave";
+import { listMyLeave, getLeaveWorkflowSteps, getLeaveApprovalTrail, getMyStaffId } from "@/lib/leave";
 import { currentUserCan } from "@/lib/staff";
 import { LeaveStatusBadge, ApprovalTimeline } from "@/components/LeaveTimeline";
 
 export default async function MyLeavePage() {
+  const myStaffId = await getMyStaffId();
   const [requests, steps, canApprove] = await Promise.all([
     listMyLeave(),
-    getLeaveWorkflowSteps(),
+    getLeaveWorkflowSteps(myStaffId),
     currentUserCan("APPROVE_LEAVE"),
   ]);
 

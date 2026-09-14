@@ -12,6 +12,7 @@ export async function createStaff(formData: FormData) {
     title: String(formData.get("title") ?? "").trim() || null,
     gender: String(formData.get("gender") ?? "") || null,
     department_id: String(formData.get("department_id") ?? "") || null,
+    office_id: String(formData.get("office_id") ?? "") || null,
     rank: String(formData.get("rank") ?? "").trim() || null,
     employment_type: String(formData.get("employment_type") ?? "") || null,
     phone: String(formData.get("phone") ?? "").trim() || null,

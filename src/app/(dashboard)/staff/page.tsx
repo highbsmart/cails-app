@@ -57,16 +57,17 @@ export default async function StaffDirectoryPage({
             <p className="text-sm text-[var(--color-ink-soft)]">
               One person per line:{" "}
               <span className="font-mono text-xs">
-                staff id,first name,surname,email,department,rank,employment type,appointment date
+                staff id,first name,surname,email,department,rank,employment type,appointment date,office
               </span>
-              . Only first name and surname are required &mdash; leave anything else blank, but keep
-              the commas. Dates as YYYY-MM-DD. A header row is ignored. Up to 300 rows at a time.
+              . Every row needs a name and either a department (academic staff) or an office
+              (administrative staff) in the last column. Dates as YYYY-MM-DD. A header row is
+              ignored. Up to 300 rows at a time.
             </p>
             <textarea
               name="csv"
               rows={10}
               required
-              placeholder={"CAILS/001,Musa,Ibrahim,musa@kwaracails.edu.ng,English,Senior Lecturer,academic,2015-03-01\nCAILS/002,Aisha,Bello,,Computer Science,Lecturer I,academic,2019-09-15"}
+              placeholder={"CAILS/001,Musa,Ibrahim,musa@kwaracails.edu.ng,English,Senior Lecturer,academic,2015-03-01,\nCAILS/002,Aisha,Bello,,,Administrative Officer I,non_academic,2019-09-15,Registrar"}
               className="w-full rounded-sm border border-[var(--color-line)] bg-white px-3 py-2 font-mono text-xs"
             />
             <p className="text-xs text-[var(--color-ink-soft)]">

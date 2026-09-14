@@ -146,6 +146,11 @@ export async function assignRole(formData: FormData) {
   };
   if (scopeType === "school") payload.scope_school_id = nullable(formData, "scope_school_id");
   if (scopeType === "department") payload.scope_department_id = nullable(formData, "scope_department_id");
+  // An office-scoped role covers whoever is posted to that office, so the
+  // office picker stops being decorative and becomes the scope itself.
+  if (scopeType === "office" && !payload.office_id) {
+    fail("users", "Choose the office this role is scoped to.");
+  }
 
   const { error } = await supabase.from("user_roles").insert(payload);
   if (error) fail("users", error.message);
@@ -451,4 +456,106 @@ export async function setCurrentSession(formData: FormData) {
 
 export async function deleteAcademicSession(formData: FormData) {
   await guardedDelete("academic_sessions", str(formData, "id"), "leave", "academic session", P_ORG);
+}
+
+/* ------------------------------------------------------------------ */
+/* Roles (positions)                                                   */
+/* ------------------------------------------------------------------ */
+
+/** Codes are referenced by workflow steps, so they're constrained and uppercase. */
+function normaliseCode(raw: string): string {
+  return raw
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 40);
+}
+
+export async function createRole(formData: FormData) {
+  const supabase = await requireAdmin(P_USERS, "roles");
+
+  const code = normaliseCode(str(formData, "code") || str(formData, "name"));
+  const name = str(formData, "name");
+  if (!code || !name) fail("roles", "A position needs both a name and a code.");
+
+  const { data, error } = await supabase
+    .from("roles")
+    .insert({ code, name, description: nullable(formData, "description") })
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    fail("roles", error.message.includes("duplicate")
+      ? `A position with the code ${code} already exists.`
+      : error.message);
+  }
+
+  // A role with no permissions can be assigned but grants nothing, so take
+  // whatever was ticked on creation rather than making it a second trip.
+  const permissionIds = formData.getAll("permission_ids").map(String).filter(Boolean);
+  if (data?.id && permissionIds.length > 0) {
+    await supabase
+      .from("role_permissions")
+      .insert(permissionIds.map((permission_id) => ({ role_id: data.id, permission_id })));
+  }
+
+  done("roles");
+}
+
+export async function updateRole(formData: FormData) {
+  await setFlag(
+    "roles",
+    str(formData, "id"),
+    { name: str(formData, "name"), description: nullable(formData, "description") },
+    "roles",
+    P_USERS
+  );
+}
+
+/**
+ * Replaces a role's permissions with exactly what was ticked. Clearing first
+ * and re-inserting keeps the stored set identical to the form, rather than
+ * accumulating whatever was ever granted.
+ */
+export async function setRolePermissions(formData: FormData) {
+  const supabase = await requireAdmin(P_USERS, "roles");
+  const roleId = str(formData, "id");
+  const permissionIds = formData.getAll("permission_ids").map(String).filter(Boolean);
+
+  const { error: clearError } = await supabase
+    .from("role_permissions")
+    .delete()
+    .eq("role_id", roleId);
+  if (clearError) fail("roles", clearError.message);
+
+  if (permissionIds.length > 0) {
+    const { error } = await supabase
+      .from("role_permissions")
+      .insert(permissionIds.map((permission_id) => ({ role_id: roleId, permission_id })));
+    if (error) fail("roles", error.message);
+  }
+
+  done("roles");
+}
+
+export async function deleteRole(formData: FormData) {
+  const supabase = await requireAdmin(P_USERS, "roles");
+  const roleId = str(formData, "id");
+
+  // Permissions are ours to clear; assignments are not — if anyone still holds
+  // this position, the delete should be refused rather than quietly stripping
+  // people of their access.
+  const { count } = await supabase
+    .from("user_roles")
+    .select("id", { count: "exact", head: true })
+    .eq("role_id", roleId)
+    .eq("is_active", true);
+
+  if ((count ?? 0) > 0) {
+    fail("roles", `That position is still held by ${count} person(s). Revoke it from them first.`);
+  }
+
+  await supabase.from("role_permissions").delete().eq("role_id", roleId);
+  await guardedDelete("roles", roleId, "roles", "position");
 }

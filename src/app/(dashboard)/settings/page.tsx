@@ -17,6 +17,8 @@ import {
   listGradeBands,
   listLeaveTypesFull,
   listAcademicSessionsFull,
+  listPermissions,
+  listRolesWithPermissions,
 } from "@/lib/settings";
 import { ProfileTabs } from "@/components/ProfileTabs";
 import { NoAccess } from "@/components/NoAccess";
@@ -55,6 +57,10 @@ import {
   updateAcademicSession,
   setCurrentSession,
   deleteAcademicSession,
+  createRole,
+  updateRole,
+  setRolePermissions,
+  deleteRole,
 } from "./actions";
 
 const input =
@@ -66,7 +72,7 @@ const saveBtn =
 const quietBtn = "text-xs text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] hover:underline";
 const dangerBtn = "text-xs text-[var(--color-clay)] hover:underline";
 
-const TAB_ORDER = ["accounts", "users", "organization", "config", "leave"];
+const TAB_ORDER = ["accounts", "users", "roles", "organization", "config", "leave"];
 
 export default async function SettingsPage({
   searchParams,
@@ -100,6 +106,10 @@ export default async function SettingsPage({
       listLeaveTypesFull(),
       listAcademicSessionsFull(),
     ]);
+  const [permissions, rolesDetailed] = await Promise.all([
+    listPermissions(),
+    listRolesWithPermissions(),
+  ]);
   const profiles = await listAllProfiles();
 
   return (
@@ -317,6 +327,7 @@ export default async function SettingsPage({
                                 <option value="institution">Institution-wide</option>
                                 <option value="school">School</option>
                                 <option value="department">Department</option>
+                                <option value="office">Office / Directorate</option>
                               </select></LabeledField>
                               <LabeledField label="Office"><select name="office_id" defaultValue={a.office_id ?? ""} className={`${input} w-44`}>
                                 <option value="">No office</option>
@@ -398,6 +409,7 @@ export default async function SettingsPage({
                           <option value="institution">Institution-wide</option>
                           <option value="school">School</option>
                           <option value="department">Department</option>
+                          <option value="office">Office / Directorate</option>
                         </select>
                       </div>
                       <div>
@@ -425,6 +437,157 @@ export default async function SettingsPage({
                     </div>
                     <button type="submit" className={`${primaryBtn} px-4 py-2`}>
                       Assign Role
+                    </button>
+                  </form>
+                </details>
+              </div>
+            ),
+          },
+          {
+            label: "Positions & Permissions",
+            content: (
+              <div className="space-y-5">
+                <p className="text-sm text-[var(--color-ink-soft)]">
+                  A position is a post someone can hold — Dean, Head of Unit, Bursar. What it lets
+                  them do is decided entirely by the permissions ticked against it, and the menu each
+                  holder sees follows from the same list.
+                </p>
+
+                <div className="space-y-3">
+                  {rolesDetailed.map((role) => (
+                    <details
+                      key={role.id}
+                      className="rounded-sm border border-[var(--color-line)] bg-white/50 p-3"
+                    >
+                      <summary className="cursor-pointer text-sm">
+                        {role.name}
+                        <span className="ml-2 font-mono text-xs text-[var(--color-ink-soft)]">
+                          {role.code}
+                        </span>
+                        <span className="ml-2 text-xs text-[var(--color-ink-soft)]">
+                          {role.permissionIds.length} permission
+                          {role.permissionIds.length === 1 ? "" : "s"} ·{" "}
+                          {role.holders === 0 ? "held by nobody" : `held by ${role.holders}`}
+                        </span>
+                      </summary>
+
+                      <div className="mt-3 space-y-4">
+                        <form action={updateRole} className="flex flex-wrap items-end gap-2">
+                          <input type="hidden" name="id" value={role.id} />
+                          <LabeledField label="Position name" className="min-w-48 flex-1">
+                            <input name="name" defaultValue={role.name} required className={`${input} w-full`} />
+                          </LabeledField>
+                          <LabeledField label="Description" className="min-w-48 flex-1">
+                            <input
+                              name="description"
+                              defaultValue={role.description ?? ""}
+                              className={`${input} w-full`}
+                            />
+                          </LabeledField>
+                          <button type="submit" className={saveBtn}>
+                            Save
+                          </button>
+                        </form>
+
+                        <form action={setRolePermissions} className="space-y-3">
+                          <input type="hidden" name="id" value={role.id} />
+                          <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
+                            {permissions.map((perm) => (
+                              <label
+                                key={perm.id}
+                                className="flex items-start gap-2 text-xs text-[var(--color-ink)]"
+                              >
+                                <input
+                                  type="checkbox"
+                                  name="permission_ids"
+                                  value={perm.id}
+                                  defaultChecked={role.permissionIds.includes(perm.id)}
+                                  className="mt-0.5"
+                                />
+                                <span>
+                                  <span className="font-mono">{perm.code}</span>
+                                  {perm.description && (
+                                    <span className="block text-[var(--color-ink-soft)]">
+                                      {perm.description}
+                                    </span>
+                                  )}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-3">
+                            <button type="submit" className={primaryBtn}>
+                              Save Permissions
+                            </button>
+                            <span className="text-xs text-[var(--color-ink-soft)]">
+                              Saving replaces this position&apos;s permissions with exactly what is
+                              ticked above.
+                            </span>
+                          </div>
+                        </form>
+
+                        <form action={deleteRole}>
+                          <input type="hidden" name="id" value={role.id} />
+                          <ConfirmSubmit
+                            className={dangerBtn}
+                            message={`Delete the position "${role.name}"? This cannot be undone.`}
+                          >
+                            Delete this position
+                          </ConfirmSubmit>
+                        </form>
+                      </div>
+                    </details>
+                  ))}
+                </div>
+
+                <details className="rounded-sm border border-[var(--color-line)] bg-[var(--color-surface)] p-4">
+                  <summary className="cursor-pointer text-sm font-medium text-[var(--color-green-deep)]">
+                    Create a position
+                  </summary>
+                  <form action={createRole} className="mt-4 space-y-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <LabeledField label="Position name">
+                        <input
+                          name="name"
+                          required
+                          placeholder="e.g. Dean of Students Affairs"
+                          className={`${input} w-full`}
+                        />
+                      </LabeledField>
+                      <LabeledField label="Code (leave blank to derive from the name)">
+                        <input
+                          name="code"
+                          placeholder="e.g. DEAN_STUDENTS"
+                          className={`${input} w-full`}
+                        />
+                      </LabeledField>
+                    </div>
+                    <LabeledField label="Description">
+                      <input name="description" className={`${input} w-full`} />
+                    </LabeledField>
+
+                    <div>
+                      <p className="mb-1.5 text-xs text-[var(--color-ink-soft)]">
+                        Tick what this position may do. A position with nothing ticked can be
+                        assigned but grants no access at all.
+                      </p>
+                      <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
+                        {permissions.map((perm) => (
+                          <label key={perm.id} className="flex items-start gap-2 text-xs">
+                            <input
+                              type="checkbox"
+                              name="permission_ids"
+                              value={perm.id}
+                              className="mt-0.5"
+                            />
+                            <span className="font-mono">{perm.code}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    <button type="submit" className={`${primaryBtn} px-4 py-2`}>
+                      Create Position
                     </button>
                   </form>
                 </details>

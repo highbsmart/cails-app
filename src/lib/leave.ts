@@ -82,12 +82,28 @@ export async function getLeaveApprovalTrail(leaveId: string): Promise<LeaveAppro
 
 export type WorkflowStep = { step_order: number; approver_role_code: string; label: string };
 
-export async function getLeaveWorkflowSteps(): Promise<WorkflowStep[]> {
+/**
+ * The chain a given member of staff actually follows. Academic staff go
+ * through their HOD; staff posted to an office with no department go through
+ * their Head of Office. The database decides which, via
+ * leave_workflow_code_for_staff — the same rule the approval function uses, so
+ * what the applicant sees is always what will be enforced.
+ */
+export async function getLeaveWorkflowSteps(staffId?: string | null): Promise<WorkflowStep[]> {
   const supabase = await createClient();
+
+  let code = "STAFF_LEAVE";
+  if (staffId) {
+    const { data: resolved } = await supabase.rpc("leave_workflow_code_for_staff", {
+      target_staff_id: staffId,
+    });
+    if (typeof resolved === "string" && resolved) code = resolved;
+  }
+
   const { data, error } = await supabase
     .from("workflow_steps")
     .select("step_order, approver_role_code, label, workflow_definitions!inner(code)")
-    .eq("workflow_definitions.code", "STAFF_LEAVE")
+    .eq("workflow_definitions.code", code)
     .order("step_order");
   if (error) throw error;
   return (data ?? []) as unknown as WorkflowStep[];

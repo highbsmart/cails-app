@@ -153,3 +153,57 @@ export async function listAcademicSessionsFull(): Promise<AcademicSessionRow[]> 
   if (error) throw error;
   return data ?? [];
 }
+
+export type PermissionOption = { id: string; code: string; description: string | null };
+
+export type RoleWithPermissions = {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  permissionIds: string[];
+  holders: number;
+};
+
+export async function listPermissions(): Promise<PermissionOption[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("permissions")
+    .select("id, code, description")
+    .order("code");
+  if (error) throw error;
+  return data ?? [];
+}
+
+/**
+ * Roles with the permissions attached to each, and how many people hold them.
+ * The holder count is what makes deletion safe to reason about — a role nobody
+ * holds can go; one in use cannot, and the screen should say so before the
+ * database has to.
+ */
+export async function listRolesWithPermissions(): Promise<RoleWithPermissions[]> {
+  const supabase = await createClient();
+
+  const [{ data: roles, error }, { data: rolePerms }, { data: assignments }] = await Promise.all([
+    supabase.from("roles").select("id, code, name, description").order("name"),
+    supabase.from("role_permissions").select("role_id, permission_id"),
+    supabase.from("user_roles").select("role_id").eq("is_active", true),
+  ]);
+  if (error) throw error;
+
+  const permsByRole = new Map<string, string[]>();
+  for (const rp of (rolePerms ?? []) as { role_id: string; permission_id: string }[]) {
+    permsByRole.set(rp.role_id, [...(permsByRole.get(rp.role_id) ?? []), rp.permission_id]);
+  }
+
+  const holdersByRole = new Map<string, number>();
+  for (const a of (assignments ?? []) as { role_id: string }[]) {
+    holdersByRole.set(a.role_id, (holdersByRole.get(a.role_id) ?? 0) + 1);
+  }
+
+  return (roles ?? []).map((r) => ({
+    ...r,
+    permissionIds: permsByRole.get(r.id) ?? [],
+    holders: holdersByRole.get(r.id) ?? 0,
+  }));
+}

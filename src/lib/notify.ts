@@ -17,17 +17,22 @@ import { sendEmail } from "@/lib/email";
 type Recipient = { email: string; full_name: string };
 
 /** Everyone holding a role, either institution-wide or over this department. */
-async function holdersOf(roleCode: string, departmentId: string | null): Promise<Recipient[]> {
+async function holdersOf(
+  roleCode: string,
+  departmentId: string | null,
+  officeId: string | null = null
+): Promise<Recipient[]> {
   try {
     const admin = createAdminClient();
     const { data } = await admin
       .from("user_roles")
-      .select("scope_type, scope_department_id, role:roles(code), user:profiles(email, full_name, is_active)")
+      .select("scope_type, scope_department_id, office_id, role:roles(code), user:profiles(email, full_name, is_active)")
       .eq("is_active", true);
 
     type Row = {
       scope_type: string;
       scope_department_id: string | null;
+      office_id: string | null;
       role: { code: string } | null;
       user: { email: string; full_name: string; is_active: boolean } | null;
     };
@@ -38,7 +43,8 @@ async function holdersOf(roleCode: string, departmentId: string | null): Promise
       .filter(
         (r) =>
           r.scope_type === "institution" ||
-          (departmentId !== null && r.scope_department_id === departmentId)
+          (departmentId !== null && r.scope_department_id === departmentId) ||
+          (officeId !== null && r.scope_type === "office" && r.office_id === officeId)
       )
       .map((r) => ({ email: r.user!.email, full_name: r.user!.full_name }));
   } catch {
@@ -46,21 +52,30 @@ async function holdersOf(roleCode: string, departmentId: string | null): Promise
   }
 }
 
-/** The role that owns a given step of a workflow. */
-async function approverRoleForStep(workflowName: string, step: number): Promise<string | null> {
+/**
+ * The role owning a step of the chain this particular applicant follows.
+ * Resolved through the same database rule the approval function uses, so a
+ * notification never goes to the wrong office.
+ */
+async function approverRoleForStep(staffId: string, step: number): Promise<string | null> {
   try {
     const admin = createAdminClient();
+    const { data: code } = await admin.rpc("leave_workflow_code_for_staff", {
+      target_staff_id: staffId,
+    });
+    if (typeof code !== "string" || !code) return null;
+
     const { data } = await admin
       .from("workflow_steps")
-      .select("approver_role_code, step_order, workflow_definition:workflow_definitions(name)")
+      .select("approver_role_code, step_order, workflow_definition:workflow_definitions(code)")
       .eq("step_order", step);
 
     type Row = {
       approver_role_code: string;
-      workflow_definition: { name: string } | null;
+      workflow_definition: { code: string } | null;
     };
     const match = ((data ?? []) as unknown as Row[]).find(
-      (r) => r.workflow_definition?.name === workflowName
+      (r) => r.workflow_definition?.code === code
     );
     return match?.approver_role_code ?? null;
   } catch {
@@ -73,13 +88,14 @@ async function leaveContext(leaveId: string) {
   const { data } = await admin
     .from("staff_leave")
     .select(
-      "id, start_date, end_date, days_requested, status, current_step_order, leave_type:leave_types(name), staff:staff(first_name, surname, email, department_id)"
+      "id, staff_id, start_date, end_date, days_requested, status, current_step_order, leave_type:leave_types(name), staff:staff(first_name, surname, email, department_id, office_id)"
     )
     .eq("id", leaveId)
     .maybeSingle();
 
   return data as unknown as {
     id: string;
+    staff_id: string;
     start_date: string;
     end_date: string;
     days_requested: number;
@@ -91,6 +107,7 @@ async function leaveContext(leaveId: string) {
       surname: string;
       email: string | null;
       department_id: string | null;
+      office_id: string | null;
     } | null;
   } | null;
 }
@@ -101,10 +118,10 @@ export async function notifyLeaveSubmitted(leaveId: string): Promise<void> {
     const leave = await leaveContext(leaveId);
     if (!leave?.staff) return;
 
-    const roleCode = await approverRoleForStep("Staff Leave Approval", leave.current_step_order || 1);
+    const roleCode = await approverRoleForStep(leave.staff_id, leave.current_step_order || 1);
     if (!roleCode) return;
 
-    const approvers = await holdersOf(roleCode, leave.staff.department_id);
+    const approvers = await holdersOf(roleCode, leave.staff.department_id, leave.staff.office_id);
     if (approvers.length === 0) return;
 
     const applicant = `${leave.staff.first_name} ${leave.staff.surname}`;
@@ -155,9 +172,9 @@ export async function notifyLeaveActioned(leaveId: string, action: string): Prom
 
     // Still in flight — whoever owns the new step should know.
     if (outcome !== "approved" && outcome !== "rejected" && action === "approve") {
-      const roleCode = await approverRoleForStep("Staff Leave Approval", leave.current_step_order);
+      const roleCode = await approverRoleForStep(leave.staff_id, leave.current_step_order);
       if (!roleCode) return;
-      const next = await holdersOf(roleCode, leave.staff.department_id);
+      const next = await holdersOf(roleCode, leave.staff.department_id, leave.staff.office_id);
       if (next.length === 0) return;
 
       await sendEmail({

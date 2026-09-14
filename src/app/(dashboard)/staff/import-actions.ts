@@ -31,10 +31,10 @@ export async function bulkImportStaff(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: departments } = await supabase
-    .from("departments")
-    .select("id, name, school_id")
-    .eq("is_active", true);
+  const [{ data: departments }, { data: offices }] = await Promise.all([
+    supabase.from("departments").select("id, name, school_id").eq("is_active", true),
+    supabase.from("offices").select("id, name").eq("is_active", true),
+  ]);
 
   const findDepartment = (typed: string) => {
     if (!typed) return null;
@@ -43,6 +43,17 @@ export async function bulkImportStaff(formData: FormData) {
       (departments ?? []).find(
         (d) => d.name.toLowerCase().replace(/^department of\s+/, "") === needle
       ) ?? null
+    );
+  };
+
+  const findOffice = (typed: string) => {
+    if (!typed) return null;
+    const needle = typed.trim().toLowerCase();
+    const list = offices ?? [];
+    return (
+      list.find((o) => o.name.toLowerCase() === needle) ??
+      list.find((o) => o.name.toLowerCase().includes(needle)) ??
+      null
     );
   };
 
@@ -60,7 +71,7 @@ export async function bulkImportStaff(formData: FormData) {
 
   for (const line of lines) {
     const c = line.split(",").map((x) => x.trim().replace(/^"|"$/g, ""));
-    const [staffId, firstName, surname, email, deptName, rank, employmentType, appointed] = c;
+    const [staffId, firstName, surname, email, deptName, rank, employmentType, appointed, officeName] = c;
     const label = [firstName, surname].filter(Boolean).join(" ") || line.slice(0, 40);
 
     if (!firstName || !surname) {
@@ -74,6 +85,21 @@ export async function bulkImportStaff(formData: FormData) {
       continue;
     }
 
+    const office = findOffice(officeName ?? "");
+    if (officeName && !office) {
+      results.push({ label, ok: false, detail: `No office matching "${officeName}".` });
+      continue;
+    }
+
+    if (!department && !office) {
+      results.push({
+        label,
+        ok: false,
+        detail: "Give either a department or an office — a record with neither can't have leave approved.",
+      });
+      continue;
+    }
+
     const { error } = await supabase.from("staff").insert({
       staff_id_number: staffId || null,
       first_name: firstName,
@@ -81,6 +107,7 @@ export async function bulkImportStaff(formData: FormData) {
       email: email ? email.toLowerCase() : null,
       department_id: department?.id ?? null,
       school_id: department?.school_id ?? null,
+      office_id: office?.id ?? null,
       rank: rank || null,
       employment_type: employmentType || null,
       appointment_date: appointed || null,

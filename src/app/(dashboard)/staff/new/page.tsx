@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { createStaff } from "./actions";
 import { currentUserCan, listDepartments } from "@/lib/staff";
+import { listAllOffices } from "@/lib/messages";
 import { redirect } from "next/navigation";
 
 export default async function NewStaffPage({
@@ -10,9 +11,10 @@ export default async function NewStaffPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   const { error } = await searchParams;
-  const [canEdit, departments] = await Promise.all([
+  const [canEdit, departments, offices] = await Promise.all([
     currentUserCan("EDIT_STAFF"),
     listDepartments(),
+    listAllOffices(),
   ]);
 
   if (!canEdit) redirect("/staff");
@@ -69,14 +71,28 @@ export default async function NewStaffPage({
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <SelectField
             name="department_id"
-            label="Department"
+            label="Department (academic staff)"
             options={departments.map((d) => ({ value: d.id, label: d.name }))}
           />
+          <SelectField
+            name="office_id"
+            label="Office / Directorate (non-academic staff)"
+            options={offices.map((o) => ({ value: o.id, label: o.name }))}
+          />
+        </div>
+
+        <p className="-mt-2 text-xs text-[var(--color-ink-soft)]">
+          Set one or the other. Academic staff belong to a department; administrative staff belong
+          to an office or directorate. Whichever you choose determines who approves their leave, so
+          a record with neither cannot have its requests approved by anyone.
+        </p>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <TextField name="rank" label="Rank" placeholder="e.g. Lecturer II" />
+          <TextField name="phone" label="Phone" type="tel" />
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <TextField name="phone" label="Phone" type="tel" />
           <TextField name="email" label="Email" type="email" />
         </div>
 
