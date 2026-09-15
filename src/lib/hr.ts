@@ -149,3 +149,44 @@ export async function getHrOverview() {
     }[],
   };
 }
+
+export type SupervisedStaff = {
+  id: string;
+  first_name: string;
+  surname: string;
+  rank: string | null;
+  employment_type: string | null;
+  status: string;
+  department: { name: string } | null;
+  office: { name: string } | null;
+};
+
+/**
+ * The staff this user supervises — their office and everything reporting up to
+ * it, plus any department they head. Resolved by the database so the list can
+ * never disagree with who may approve their leave.
+ *
+ * Because it reads live from the staff record, a transfer moves someone off
+ * this list and onto their new supervisor's the moment it is recorded.
+ */
+export async function getSupervisedStaff(): Promise<SupervisedStaff[]> {
+  const supabase = await createClient();
+
+  const { data: ids, error: idError } = await supabase.rpc("staff_under_user");
+  if (idError) return [];
+
+  const staffIds = ((ids ?? []) as unknown as (string | { staff_under_user: string })[])
+    .map((row) => (typeof row === "string" ? row : row.staff_under_user))
+    .filter(Boolean);
+
+  if (staffIds.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from("staff")
+    .select("id, first_name, surname, rank, employment_type, status, department:departments(name), office:offices(name)")
+    .in("id", staffIds)
+    .order("surname");
+  if (error) return [];
+
+  return (data ?? []) as unknown as SupervisedStaff[];
+}

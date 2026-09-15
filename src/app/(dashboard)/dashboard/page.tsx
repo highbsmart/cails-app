@@ -117,6 +117,28 @@ export default async function DashboardPage() {
         </div>
       )}
 
+      {d.supervised.length > 0 && (
+        <Panel title={`Staff posted under you (${d.supervised.length})`} href="/staff">
+          <ul>
+            {d.supervised.slice(0, 8).map((s) => (
+              <Row key={s.id}>
+                {s.first_name} {s.surname}
+                <Muted>
+                  {s.rank ?? "Rank not set"}
+                  {s.office ? ` · ${s.office.name}` : s.department ? ` · ${s.department.name}` : ""}
+                  {s.status !== "active" ? ` · ${s.status}` : ""}
+                </Muted>
+              </Row>
+            ))}
+          </ul>
+          {d.supervised.length > 8 && (
+            <p className="pt-2 text-xs text-[var(--color-ink-soft)]">
+              and {d.supervised.length - 8} more
+            </p>
+          )}
+        </Panel>
+      )}
+
       {d.meetings.length > 0 && (
         <Panel title="Upcoming meetings" href="/meetings">
           <ul>

@@ -49,16 +49,18 @@ export function PostingHistoryTable({ postings }: { postings: Posting[] }) {
 export function PostStaffForm({
   staffId,
   departments,
+  offices = [],
   error,
 }: {
   staffId: string;
   departments: { id: string; name: string }[];
+  offices?: { id: string; name: string }[];
   error?: string;
 }) {
   return (
     <details className="rounded-sm border border-[var(--color-line)] bg-[var(--color-surface)] p-4">
       <summary className="cursor-pointer text-sm font-medium text-[var(--color-green-deep)]">
-        Post to another department
+        Post to another department or office
       </summary>
 
       {error && (
@@ -73,20 +75,35 @@ export function PostStaffForm({
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label className="mb-1 block text-sm text-[var(--color-ink-soft)]">
-              Destination Department
+              Destination Department (academic)
             </label>
             <select
               name="department_id"
-              required
               defaultValue=""
               className="w-full rounded-sm border border-[var(--color-line)] bg-white px-3 py-2 text-sm focus:outline-none"
             >
-              <option value="" disabled>
-                Select…
-              </option>
+              <option value="">—</option>
               {departments.map((d) => (
                 <option key={d.id} value={d.id}>
                   {d.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm text-[var(--color-ink-soft)]">
+              Destination Office / Directorate (administrative)
+            </label>
+            <select
+              name="office_id"
+              defaultValue=""
+              className="w-full rounded-sm border border-[var(--color-line)] bg-white px-3 py-2 text-sm focus:outline-none"
+            >
+              <option value="">—</option>
+              {offices.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.name}
                 </option>
               ))}
             </select>

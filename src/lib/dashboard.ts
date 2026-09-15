@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { listPendingApprovals, listMyLeave } from "@/lib/leave";
 import { listMyTasks } from "@/lib/tasks";
 import { listMemosForMyOffices } from "@/lib/memos";
+import { getSupervisedStaff } from "@/lib/hr";
 
 /**
  * Every panel on the dashboard is optional. A user whose role can't see staff
@@ -45,6 +46,7 @@ export async function getDashboard() {
     studentCount,
     departmentCount,
     meetings,
+    supervised,
   ] = await Promise.all([
     safe(listPendingApprovals, []),
     safe(listMyLeave, []),
@@ -63,6 +65,7 @@ export async function getDashboard() {
         .limit(5);
       return (data ?? []) as UpcomingMeeting[];
     }, [] as UpcomingMeeting[]),
+    safe(getSupervisedStaff, []),
   ]);
 
   const closed = ["completed", "done", "cancelled", "closed"];
@@ -83,6 +86,7 @@ export async function getDashboard() {
     overdueTasks,
     myPendingLeave,
     meetings,
+    supervised,
     staffCount,
     studentCount,
     departmentCount,

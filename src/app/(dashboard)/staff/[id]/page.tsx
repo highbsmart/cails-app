@@ -7,6 +7,7 @@ import { ProfileTabs } from "@/components/ProfileTabs";
 import { DocumentPanel } from "@/components/DocumentPanel";
 import { listDocumentsFor } from "@/lib/documents";
 import { listQualifications, getStaffLeaveHistory, getAuditTrail } from "@/lib/hr";
+import { listAllOffices } from "@/lib/messages";
 import { ConfirmSubmit } from "@/components/ConfirmSubmit";
 import { addQualification, deleteQualification } from "./career-actions";
 import { Field } from "@/components/Field";
@@ -32,7 +33,7 @@ export default async function StaffProfilePage({
   const { id } = await params;
   const { postError, trainingError, promotionError, appraisalError, docError, qualError } =
     await searchParams;
-  const [staff, postings, canEdit, departments, training, criteria, appraisals, promotions] =
+  const [staff, postings, canEdit, departments, training, criteria, appraisals, promotions, offices] =
     await Promise.all([
       getStaffById(id),
       getPostingHistory(id),
@@ -42,6 +43,7 @@ export default async function StaffProfilePage({
       listAppraisalCriteria(),
       getAppraisals(id),
       getPromotionHistory(id),
+      listAllOffices(),
     ]);
 
   if (!staff) notFound();
@@ -122,7 +124,12 @@ export default async function StaffProfilePage({
                 </div>
 
                 {canEdit && (
-                  <PostStaffForm staffId={staff.id} departments={departments} error={postError} />
+                  <PostStaffForm
+                    staffId={staff.id}
+                    departments={departments}
+                    offices={offices}
+                    error={postError}
+                  />
                 )}
               </div>
             ),
