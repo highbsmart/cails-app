@@ -5,8 +5,10 @@ import { getTask, getTaskComments, isOverdue } from "@/lib/tasks";
 import { listDocumentsFor } from "@/lib/documents";
 import { DocumentPanel } from "@/components/DocumentPanel";
 import { updateTaskStatus, addTaskComment } from "../actions";
+import { createClient } from "@/lib/supabase/server";
 
-const STATUS_OPTIONS = ["pending", "in_progress", "awaiting_review", "completed"];
+const ASSIGNEE_OPTIONS = ["pending", "in_progress", "awaiting_review"];
+const CREATOR_OPTIONS = ["in_progress", "completed"];
 
 export default async function TaskDetailPage({
   params,
@@ -19,6 +21,13 @@ export default async function TaskDetailPage({
   const { error, docError } = await searchParams;
   const task = await getTask(id);
   if (!task) notFound();
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  // The creator accepts or returns work; the assignee progresses it.
+  const isCreator = task.created_by === user?.id;
 
   const comments = await getTaskComments(id);
   const attachments = await listDocumentsFor("task", id);
@@ -77,7 +86,7 @@ export default async function TaskDetailPage({
             defaultValue={task.status}
             className="rounded-sm border border-[var(--color-line)] bg-white px-2 py-1 text-sm focus:outline-none"
           >
-            {STATUS_OPTIONS.map((s) => (
+            {(isCreator ? CREATOR_OPTIONS : ASSIGNEE_OPTIONS).map((s) => (
               <option key={s} value={s}>
                 {s.replace("_", " ")}
               </option>
@@ -89,7 +98,11 @@ export default async function TaskDetailPage({
           >
             Update
           </button>
-          <span className="text-xs text-[var(--color-ink-soft)]">Only the assignee can move this.</span>
+          <span className="text-xs text-[var(--color-ink-soft)]">
+            {isCreator
+              ? "You set this task — accept it as completed, or send it back to in progress."
+              : "Move it to awaiting review when done; only the person who set it can close it."}
+          </span>
         </form>
       </div>
 

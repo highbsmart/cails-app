@@ -45,10 +45,12 @@ export async function updateTaskStatus(formData: FormData) {
   const id = String(formData.get("task_id") ?? "");
   const status = String(formData.get("status") ?? "");
 
-  const { error } = await supabase
-    .from("tasks")
-    .update({ status, updated_at: new Date().toISOString() })
-    .eq("id", id);
+  // set_task_status enforces who may move a task and where to, so the rule
+  // holds regardless of what the form submits.
+  const { error } = await supabase.rpc("set_task_status", {
+    p_task_id: id,
+    p_status: status,
+  });
 
   if (error) {
     redirect(`/tasks/${id}?error=` + encodeURIComponent(error.message));
