@@ -557,5 +557,5 @@ export async function deleteRole(formData: FormData) {
   }
 
   await supabase.from("role_permissions").delete().eq("role_id", roleId);
-  await guardedDelete("roles", roleId, "roles", "position");
+  await guardedDelete("roles", roleId, "roles", "position", P_USERS);
 }
