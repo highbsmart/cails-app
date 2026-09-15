@@ -52,8 +52,27 @@ export async function uploadDocument(formData: FormData) {
     fail(formData, `That file is larger than the 20 MB limit.`);
   }
 
-  const entityType = str(formData, "entity_type") || "general";
-  const entityId = nullable(formData, "entity_id");
+  let entityType = str(formData, "entity_type") || "general";
+  let entityId = nullable(formData, "entity_id");
+
+  // Sending to a colleague files the document against their staff record,
+  // which is what makes it visible to them under the existing policy. The
+  // lookup returns only an id, so the sender learns nothing about them.
+  const sendTo = str(formData, "send_to_email").toLowerCase();
+  if (sendTo) {
+    const { data: recipientStaffId } = await supabase.rpc("staff_id_for_email", {
+      p_email: sendTo,
+    });
+    if (!recipientStaffId) {
+      fail(
+        formData,
+        `No staff record is linked to ${sendTo}. Check the address, or ask an administrator to link their account to their staff record.`
+      );
+    }
+    entityType = "staff";
+    entityId = recipientStaffId as string;
+  }
+
   if (entityType !== "general" && !entityId) {
     fail(formData, "This document must be filed against a record.");
   }

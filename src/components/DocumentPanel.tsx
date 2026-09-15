@@ -148,6 +148,25 @@ export function DocumentPanel({
             <label className="mb-1 block text-sm text-[var(--color-ink-soft)]">Description (optional)</label>
             <input name="description" className={`${input} w-full`} />
           </div>
+
+          {entityType === "general" && (
+            <div>
+              <label className="mb-1 block text-sm text-[var(--color-ink-soft)]">
+                Send to a colleague (optional)
+              </label>
+              <input
+                name="send_to_email"
+                type="email"
+                placeholder="their email address"
+                className={`${input} w-full`}
+              />
+              <p className="mt-1 text-xs text-[var(--color-ink-soft)]">
+                Leave blank to keep this in the registry. Enter an address and the document is filed
+                against that person&apos;s record, so it appears in their Documents for review,
+                download and printing. They must already have an account linked to a staff record.
+              </p>
+            </div>
+          )}
           <button type="submit" className={primaryBtn}>
             Upload
           </button>

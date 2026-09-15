@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { getTask, getTaskComments, isOverdue } from "@/lib/tasks";
+import { listDocumentsFor } from "@/lib/documents";
+import { DocumentPanel } from "@/components/DocumentPanel";
 import { updateTaskStatus, addTaskComment } from "../actions";
 
 const STATUS_OPTIONS = ["pending", "in_progress", "awaiting_review", "completed"];
@@ -11,14 +13,15 @@ export default async function TaskDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; docError?: string }>;
 }) {
   const { id } = await params;
-  const { error } = await searchParams;
+  const { error, docError } = await searchParams;
   const task = await getTask(id);
   if (!task) notFound();
 
   const comments = await getTaskComments(id);
+  const attachments = await listDocumentsFor("task", id);
   const overdue = isOverdue(task);
 
   return (
@@ -91,6 +94,22 @@ export default async function TaskDetailPage({
       </div>
 
       <div className="space-y-3">
+        <h2 className="font-serif text-sm text-[var(--color-green-deep)]">Attachments</h2>
+        <p className="mb-2 text-sm text-[var(--color-ink-soft)]">
+          Work produced for this task goes here. Whoever set the task and whoever was assigned it
+          can both open it — nobody else.
+        </p>
+        <DocumentPanel
+          documents={attachments}
+          entityType="task"
+          entityId={id}
+          returnTo={`/tasks/${id}`}
+          error={docError}
+          emptyText="Nothing attached yet."
+        />
+      </div>
+
+      <div className="mt-6 space-y-3">
         <h2 className="font-serif text-sm text-[var(--color-green-deep)]">Comments</h2>
         {comments.length === 0 ? (
           <p className="rounded-sm border border-dashed border-[var(--color-line)] bg-[var(--color-surface)]/50 px-4 py-4 text-center text-sm text-[var(--color-ink-soft)]">
