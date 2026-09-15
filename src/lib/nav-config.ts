@@ -40,13 +40,10 @@ export const NAV_ITEMS: NavItem[] = [
     requiresAnyPermission: ["VIEW_STAFF"],
   },
   { href: "/leave", label: "My Leave", labelAr: "الإجازات", icon: "leave" },
-  {
-    href: "/communication",
-    label: "Communication",
-    labelAr: "التواصل",
-    icon: "communication",
-    requiresAnyPermission: ["ISSUE_MEMO", "APPROVE_MEMO"],
-  },
+  // Open to everyone: messages are person-to-person, so gating this on the
+  // permission to *issue* memos hid it from exactly the people receiving them.
+  // The page itself only ever shows what belongs to the signed-in user.
+  { href: "/communication", label: "Communication", labelAr: "التواصل", icon: "communication" },
   {
     href: "/academic",
     label: "Academic",

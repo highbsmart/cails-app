@@ -33,7 +33,7 @@ export default async function DashboardPage() {
         <p className="text-sm text-[var(--color-ink-soft)]">
           {user.roleNames.join(" · ")}
           {d.actionCount > 0
-            ? ` — ${d.actionCount} item${d.actionCount === 1 ? "" : "s"} need your attention`
+            ? ` — ${d.actionCount} item${d.actionCount === 1 ? " needs" : "s need"} your attention`
             : " — nothing awaiting you"}
         </p>
       </div>

@@ -62,11 +62,49 @@ export async function listPendingApprovals(): Promise<LeaveRequest[]> {
     .in("status", ["submitted", "under_review"])
     .order("created_at", { ascending: true });
   if (error) throw error;
-  // RLS already restricts to what this user can VIEW; the workflow-step
-  // gate (can they actually act?) is enforced by action_on_leave_request()
-  // itself, so this list may include a small number of visible-but-not-
-  // yet-actionable rows for department heads watching earlier steps.
-  return (data ?? []) as unknown as LeaveRequest[];
+  const rows = (data ?? []) as unknown as LeaveRequest[];
+  if (rows.length === 0) return [];
+
+  // Being able to SEE a request is not the same as being the person who has to
+  // act on it. Without this filter an ordinary member of staff whose role can
+  // view leave sees colleagues' requests under "awaiting your approval", which
+  // is both alarming and wrong. Keep only the ones where this user genuinely
+  // holds the role for the applicant's current step.
+  const { data: stepRows } = await supabase
+    .from("workflow_steps")
+    .select("step_order, approver_role_code, workflow_definitions!inner(code)");
+
+  type StepRow = {
+    step_order: number;
+    approver_role_code: string;
+    workflow_definitions: { code: string } | null;
+  };
+  const roleFor = new Map<string, string>();
+  for (const s of (stepRows ?? []) as unknown as StepRow[]) {
+    if (s.workflow_definitions?.code) {
+      roleFor.set(`${s.workflow_definitions.code}:${s.step_order}`, s.approver_role_code);
+    }
+  }
+
+  const actionable = await Promise.all(
+    rows.map(async (row) => {
+      const { data: wfCode } = await supabase.rpc("leave_workflow_code_for_staff", {
+        target_staff_id: row.staff_id,
+      });
+      if (typeof wfCode !== "string") return null;
+
+      const roleCode = roleFor.get(`${wfCode}:${row.current_step_order}`);
+      if (!roleCode) return null;
+
+      const { data: holds } = await supabase.rpc("holds_role_for_staff", {
+        role_code: roleCode,
+        target_staff_id: row.staff_id,
+      });
+      return holds ? row : null;
+    })
+  );
+
+  return actionable.filter((r): r is LeaveRequest => r !== null);
 }
 
 export async function getLeaveApprovalTrail(leaveId: string): Promise<LeaveApprovalEntry[]> {
