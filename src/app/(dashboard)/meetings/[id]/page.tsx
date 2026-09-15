@@ -12,6 +12,7 @@ import {
   MEETING_STATUSES,
   AGENDA_STATUSES,
   ATTENDANCE_STATUSES,
+  ATTENDEE_ROLES,
 } from "@/lib/meetings";
 import { listAllOffices } from "@/lib/messages";
 import { currentUserCan } from "@/lib/staff";
@@ -30,6 +31,8 @@ import {
   removeAttendee,
   saveMinutes,
   advanceMinutes,
+  inviteOfficeHeads,
+  inviteByEmail,
 } from "../actions";
 
 const input =
@@ -227,9 +230,11 @@ export default async function MeetingPage({
                         >
                           <span className="text-sm">
                             {a.staff ? `${a.staff.first_name} ${a.staff.surname}` : a.guest_name}
-                            {!a.staff && (
-                              <span className="ml-1.5 text-xs text-[var(--color-ink-soft)]">guest</span>
-                            )}
+                            <span className="ml-1.5 text-xs text-[var(--color-ink-soft)]">
+                              {a.attendee_role}
+                              {a.staff?.office ? ` · ${a.staff.office.name}` : ""}
+                              {!a.staff ? " · guest" : ""}
+                            </span>
                           </span>
                           {canManage ? (
                             <div className="flex items-center gap-2">
@@ -263,6 +268,66 @@ export default async function MeetingPage({
                     </ul>
                   )}
                 </div>
+
+                {canManage && (
+                  <div className="space-y-3 rounded-sm border border-[var(--color-line)] bg-[var(--color-surface)] p-3">
+                    <p className="text-sm text-[var(--color-ink-soft)]">
+                      Invite the heads of an office in one go, or call in a named person from any
+                      office. Mark anyone who need not attend as <em>excused</em> so the record shows
+                      they were considered rather than forgotten.
+                    </p>
+
+                    <form action={inviteOfficeHeads} className="flex flex-wrap items-end gap-2">
+                      <input type="hidden" name="meeting_id" value={meeting.id} />
+                      <LabeledField label="Invite heads of" className="min-w-48 flex-1">
+                        <select name="office_id" required defaultValue="" className={`${input} w-full`}>
+                          <option value="" disabled>
+                            Select an office…
+                          </option>
+                          {offices.map((o) => (
+                            <option key={o.id} value={o.id}>
+                              {o.name}
+                            </option>
+                          ))}
+                        </select>
+                      </LabeledField>
+                      <LabeledField label="As">
+                        <select name="status" defaultValue="invited" className={`${input} w-36`}>
+                          <option value="invited">Invited</option>
+                          <option value="excused">Not required</option>
+                        </select>
+                      </LabeledField>
+                      <button type="submit" className={saveBtn}>
+                        Invite office
+                      </button>
+                    </form>
+
+                    <form action={inviteByEmail} className="flex flex-wrap items-end gap-2">
+                      <input type="hidden" name="meeting_id" value={meeting.id} />
+                      <LabeledField label="Invite by email" className="min-w-48 flex-1">
+                        <input
+                          name="email"
+                          type="email"
+                          required
+                          placeholder="their email address"
+                          className={`${input} w-full`}
+                        />
+                      </LabeledField>
+                      <LabeledField label="Attending as">
+                        <select name="attendee_role" defaultValue="member" className={`${input} w-36`}>
+                          {ATTENDEE_ROLES.map((r) => (
+                            <option key={r} value={r}>
+                              {r}
+                            </option>
+                          ))}
+                        </select>
+                      </LabeledField>
+                      <button type="submit" className={saveBtn}>
+                        Invite person
+                      </button>
+                    </form>
+                  </div>
+                )}
 
                 {canManage && (
                   <form action={addAttendee} className="flex flex-wrap items-end gap-2">

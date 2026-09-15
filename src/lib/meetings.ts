@@ -4,7 +4,8 @@ export const MEETING_TYPES = ["statutory", "committee", "board", "departmental",
 export const MEETING_STATUSES = ["scheduled", "held", "cancelled"] as const;
 export const MINUTES_STATUSES = ["none", "draft", "circulated", "adopted"] as const;
 export const AGENDA_STATUSES = ["pending", "discussed", "deferred", "dropped"] as const;
-export const ATTENDANCE_STATUSES = ["present", "absent", "apology"] as const;
+export const ATTENDANCE_STATUSES = ["invited", "present", "absent", "apology", "excused"] as const;
+export const ATTENDEE_ROLES = ["chair", "member", "secretary", "observer"] as const;
 
 export type MeetingRow = {
   id: string;
@@ -39,7 +40,8 @@ export type AttendanceEntry = {
   id: string;
   guest_name: string | null;
   status: string;
-  staff: { id: string; first_name: string; surname: string } | null;
+  attendee_role: string;
+  staff: { id: string; first_name: string; surname: string; office: { name: string } | null } | null;
 };
 
 const LIST_SELECT =
@@ -90,7 +92,7 @@ export async function getAttendance(meetingId: string): Promise<AttendanceEntry[
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("meeting_attendance")
-    .select("id, guest_name, status, staff:staff(id, first_name, surname)")
+    .select("id, guest_name, status, attendee_role, staff:staff(id, first_name, surname, office:offices(name))")
     .eq("meeting_id", meetingId)
     .order("created_at");
   if (error) throw error;

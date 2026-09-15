@@ -252,3 +252,53 @@ export async function advanceMinutes(formData: FormData) {
   if (!data || data.length === 0) fail(`/meetings/${id}`, "Nothing changed — check your permissions.");
   back(id);
 }
+
+/* ---------------- Invitations ---------------- */
+
+/**
+ * Invites every head of an office in one go — the usual case for a board or
+ * committee, where the invitation is to the post rather than the person.
+ */
+export async function inviteOfficeHeads(formData: FormData) {
+  const supabase = await createClient();
+  const meetingId = str(formData, "meeting_id");
+  const officeId = str(formData, "office_id");
+  if (!officeId) fail(`/meetings/${meetingId}`, "Choose an office to invite.");
+
+  const { data, error } = await supabase.rpc("invite_office_heads", {
+    p_meeting_id: meetingId,
+    p_office_id: officeId,
+    p_status: str(formData, "status") || "invited",
+  });
+
+  if (error) fail(`/meetings/${meetingId}`, explain(error.message));
+  if (!data || Number(data) === 0) {
+    fail(
+      `/meetings/${meetingId}`,
+      "Nobody was added — that office has no head assigned, or they were already on the list. Assign an office-scoped role to its head first."
+    );
+  }
+  back(meetingId);
+}
+
+/**
+ * Invites one named person by email, whichever office they belong to. This is
+ * how someone is called in for a specific purpose — a secretary from another
+ * directorate, say — without the convener needing the staff directory.
+ */
+export async function inviteByEmail(formData: FormData) {
+  const supabase = await createClient();
+  const meetingId = str(formData, "meeting_id");
+  const email = str(formData, "email");
+  if (!email) fail(`/meetings/${meetingId}`, "Enter the person's email address.");
+
+  const { error } = await supabase.rpc("invite_staff_by_email", {
+    p_meeting_id: meetingId,
+    p_email: email,
+    p_attendee_role: str(formData, "attendee_role") || "member",
+    p_status: str(formData, "status") || "invited",
+  });
+
+  if (error) fail(`/meetings/${meetingId}`, explain(error.message));
+  back(meetingId);
+}
