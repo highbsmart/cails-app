@@ -24,6 +24,12 @@ export default async function DashboardPage() {
 
   const d = await getDashboard();
 
+  const can = (code: string) => user.permissionCodes.includes(code);
+  const canSeeOrg = can("CONFIGURE_ORG_UNITS") || can("MANAGE_ACADEMIC_STRUCTURE");
+  const canSeeStaff = can("EDIT_STAFF") || can("VIEW_STAFF");
+  const canSeeStudents = can("MANAGE_ACADEMIC_STRUCTURE");
+  const canSeeMeetings = can("MANAGE_MEETINGS");
+
   return (
     <div className="space-y-6">
       <div>
@@ -155,19 +161,38 @@ export default async function DashboardPage() {
         </Panel>
       )}
 
-      {/* Institution figures, each shown only where the role can actually read them. */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {d.departmentCount !== null && (
-          <SummaryCard icon={Building2} label="Departments" value={d.departmentCount} href="/settings?tab=organization" />
-        )}
-        {d.staffCount !== null && (
-          <SummaryCard icon={Users2} label="Staff on register" value={d.staffCount} href="/staff" />
-        )}
-        {d.studentCount !== null && (
-          <SummaryCard icon={GraduationCap} label="Students" value={d.studentCount} href="/students" />
-        )}
-        <SummaryCard icon={CalendarDays} label="Meetings scheduled" value={d.meetings.length} href="/meetings" />
-      </div>
+      {/*
+        Institution-wide figures follow the permission governing the module they
+        link to. A card that leads somewhere the person can't open is just a
+        locked door with a number on it, and telling every member of staff how
+        many departments exist serves nobody.
+      */}
+      {(canSeeOrg || canSeeStaff || canSeeStudents || canSeeMeetings) && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {canSeeOrg && d.departmentCount !== null && (
+            <SummaryCard
+              icon={Building2}
+              label="Departments"
+              value={d.departmentCount}
+              href="/settings?tab=organization"
+            />
+          )}
+          {canSeeStaff && d.staffCount !== null && (
+            <SummaryCard icon={Users2} label="Staff on register" value={d.staffCount} href="/staff" />
+          )}
+          {canSeeStudents && d.studentCount !== null && (
+            <SummaryCard icon={GraduationCap} label="Students" value={d.studentCount} href="/students" />
+          )}
+          {canSeeMeetings && (
+            <SummaryCard
+              icon={CalendarDays}
+              label="Meetings scheduled"
+              value={d.meetings.length}
+              href="/meetings"
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }
