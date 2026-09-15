@@ -56,14 +56,14 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Staff",
     labelAr: "الموظفون",
     icon: "staff",
-    requiresAnyPermission: ["VIEW_STAFF"],
+    requiresAnyPermission: ["EDIT_STAFF"],
   },
   {
     href: "/students",
     label: "Students",
     labelAr: "الطلاب",
     icon: "students",
-    requiresAnyPermission: ["VIEW_STAFF", "MANAGE_ACADEMIC_STRUCTURE"],
+    requiresAnyPermission: ["MANAGE_ACADEMIC_STRUCTURE"],
   },
   {
     href: "/examination",
