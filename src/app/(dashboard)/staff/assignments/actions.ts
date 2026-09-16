@@ -5,13 +5,13 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 /**
- * Sets where one member of staff belongs, and optionally their email.
+ * Places a member of staff in an office or department.
  *
- * A record with neither a department nor an office sits outside every approval
- * chain, so this screen exists to clear that backlog quickly after an import.
- * Posting through transfer_staff would open a posting-history entry for each —
- * correct for a genuine transfer, wrong for filling in a blank, so this writes
- * the record directly.
+ * The rule lives in assign_staff_to_unit(): holders of EDIT_STAFF may assign
+ * anyone anywhere, while a unit head may only claim someone unassigned, or
+ * release someone already in their own unit. That keeps the Registrar's reach
+ * wide and a Deputy Registrar's narrow, without either needing a different
+ * screen.
  */
 export async function setAssignment(formData: FormData) {
   const supabase = await createClient();
@@ -30,39 +30,31 @@ export async function setAssignment(formData: FormData) {
     );
   }
 
-  let schoolId: string | null = null;
-  if (departmentId) {
-    const { data: dept } = await supabase
-      .from("departments")
-      .select("school_id")
-      .eq("id", departmentId)
-      .maybeSingle();
-    schoolId = dept?.school_id ?? null;
-  }
-
-  const { data, error } = await supabase
-    .from("staff")
-    .update({
-      department_id: departmentId,
-      school_id: schoolId,
-      office_id: officeId,
-      ...(email ? { email } : {}),
-      ...(employmentType ? { employment_type: employmentType } : {}),
-    })
-    .eq("id", id)
-    .select("id");
+  const { error } = await supabase.rpc("assign_staff_to_unit", {
+    p_staff_id: id,
+    p_office_id: officeId,
+    p_department_id: departmentId,
+  });
 
   if (error) {
     redirect("/staff/assignments?error=" + encodeURIComponent(error.message));
   }
-  if (!data || data.length === 0) {
-    redirect(
-      "/staff/assignments?error=" +
-        encodeURIComponent("Nothing saved — you may not have permission to edit that record.")
-    );
+
+  // Email and cadre are record corrections rather than placements, so they are
+  // only offered to people who may edit the record itself. If the update is
+  // refused, the assignment above still stands.
+  if (email || employmentType) {
+    await supabase
+      .from("staff")
+      .update({
+        ...(email ? { email } : {}),
+        ...(employmentType ? { employment_type: employmentType } : {}),
+      })
+      .eq("id", id);
   }
 
   revalidatePath("/staff/assignments");
   revalidatePath("/staff");
+  revalidatePath("/dashboard");
   redirect("/staff/assignments?notice=" + encodeURIComponent("Assignment saved."));
 }

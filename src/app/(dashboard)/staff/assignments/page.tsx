@@ -33,10 +33,27 @@ export default async function AssignmentsPage({
   const { error, notice, show } = await searchParams;
 
   const canEdit = await currentUserCan("EDIT_STAFF");
-  if (!canEdit) redirect("/staff");
 
   const supabase = await createClient();
-  const [{ data: staffRows }, departments, offices] = await Promise.all([
+
+  // Unit heads reach this screen too, but only for their own units. The lists
+  // below are narrowed to what they head; EDIT_STAFF holders see everything.
+  const [{ data: myOfficeIds }, { data: myDeptIds }] = await Promise.all([
+    supabase.rpc("offices_under_user"),
+    supabase.rpc("departments_under_user"),
+  ]);
+  const idsOf = (rows: unknown): string[] =>
+    ((rows ?? []) as (string | Record<string, string>)[])
+      .map((r) => (typeof r === "string" ? r : Object.values(r)[0]))
+      .filter(Boolean);
+  const headedOffices = idsOf(myOfficeIds);
+  const headedDepartments = idsOf(myDeptIds);
+
+  if (!canEdit && headedOffices.length === 0 && headedDepartments.length === 0) {
+    redirect("/staff");
+  }
+
+  const [{ data: staffRows }, allDepartments, allOffices] = await Promise.all([
     supabase
       .from("staff")
       .select("id, title, first_name, surname, rank, grade_level, employment_type, email, department_id, office_id")
@@ -45,6 +62,11 @@ export default async function AssignmentsPage({
     listDepartments(),
     listAllOffices(),
   ]);
+
+  const departments = canEdit
+    ? allDepartments
+    : allDepartments.filter((d) => headedDepartments.includes(d.id));
+  const offices = canEdit ? allOffices : allOffices.filter((o) => headedOffices.includes(o.id));
 
   const all = (staffRows ?? []) as unknown as Row[];
   const unassignedOnly = show !== "all";
@@ -140,22 +162,30 @@ export default async function AssignmentsPage({
                       ))}
                     </select>
                   </LabeledField>
-                  <LabeledField label="Cadre">
-                    <select name="employment_type" defaultValue={s.employment_type ?? ""} className={`${input} w-36`}>
-                      <option value="">—</option>
-                      <option value="academic">Academic</option>
-                      <option value="non_academic">Non-academic</option>
-                    </select>
-                  </LabeledField>
-                  <LabeledField label="Email" className="min-w-44 flex-1">
-                    <input
-                      name="email"
-                      type="email"
-                      defaultValue={s.email ?? ""}
-                      placeholder="set later if unknown"
-                      className={`${input} w-full`}
-                    />
-                  </LabeledField>
+                  {canEdit && (
+                    <LabeledField label="Cadre">
+                      <select
+                        name="employment_type"
+                        defaultValue={s.employment_type ?? ""}
+                        className={`${input} w-36`}
+                      >
+                        <option value="">—</option>
+                        <option value="academic">Academic</option>
+                        <option value="non_academic">Non-academic</option>
+                      </select>
+                    </LabeledField>
+                  )}
+                  {canEdit && (
+                    <LabeledField label="Email" className="min-w-44 flex-1">
+                      <input
+                        name="email"
+                        type="email"
+                        defaultValue={s.email ?? ""}
+                        placeholder="set later if unknown"
+                        className={`${input} w-full`}
+                      />
+                    </LabeledField>
+                  )}
                   <button type="submit" className={saveBtn}>
                     Save
                   </button>
