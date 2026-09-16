@@ -6,15 +6,36 @@ import { redirect } from "next/navigation";
 
 type RowResult = { label: string; ok: boolean; detail: string };
 
+/** Nigerian rolls write dates as DD/MM/YYYY; ISO is accepted too. */
+function parseDate(raw: string | undefined): string | null {
+  const value = (raw ?? "").trim();
+  if (!value) return null;
+  const dmy = value.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+  if (dmy) {
+    const [, d, m, y] = dmy;
+    return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  return null;
+}
+
+function parseGender(raw: string | undefined): string | null {
+  const v = (raw ?? "").trim().toUpperCase();
+  if (v.startsWith("M")) return "male";
+  if (v.startsWith("F")) return "female";
+  return null;
+}
+
 /**
- * Bulk staff import from pasted CSV:
- *   staff_id,first_name,surname,email,department,rank,employment_type,appointment_date
+ * Bulk staff import, in the column order of the college's nominal roll so a
+ * row can be typed straight across from the printed sheet:
  *
- * Only first name and surname are required. Department is matched loosely —
- * "English" finds "Department of English" — because nobody will type the full
- * formal name for two hundred rows. An unmatched department is reported rather
- * than silently dropped, since a staff member with no department falls outside
- * every departmental approval chain.
+ *   title,first name,middle name,surname,sex,date of birth,LGA,state,
+ *   designation,grade level,DOFA,DOPA,retirement date,phone,department,office
+ *
+ * Only surname and first name are required. Department and office are both
+ * optional here — they can be set afterwards on the Assignments screen, which
+ * is the practical order when the roll doesn't record them.
  */
 export async function bulkImportStaff(formData: FormData) {
   const supabase = await createClient();
@@ -36,23 +57,13 @@ export async function bulkImportStaff(formData: FormData) {
     supabase.from("offices").select("id, name").eq("is_active", true),
   ]);
 
-  const findDepartment = (typed: string) => {
+  const loose = (list: { id: string; name: string }[] | null, typed: string) => {
     if (!typed) return null;
     const needle = typed.trim().toLowerCase().replace(/^department of\s+/, "");
+    const l = list ?? [];
     return (
-      (departments ?? []).find(
-        (d) => d.name.toLowerCase().replace(/^department of\s+/, "") === needle
-      ) ?? null
-    );
-  };
-
-  const findOffice = (typed: string) => {
-    if (!typed) return null;
-    const needle = typed.trim().toLowerCase();
-    const list = offices ?? [];
-    return (
-      list.find((o) => o.name.toLowerCase() === needle) ??
-      list.find((o) => o.name.toLowerCase().includes(needle)) ??
+      l.find((x) => x.name.toLowerCase().replace(/^department of\s+/, "") === needle) ??
+      l.find((x) => x.name.toLowerCase().includes(needle)) ??
       null
     );
   };
@@ -61,7 +72,7 @@ export async function bulkImportStaff(formData: FormData) {
     .split("\n")
     .map((l) => l.trim())
     .filter(Boolean)
-    .filter((l) => !/^staff_?id\s*,/i.test(l));
+    .filter((l) => !/^title\s*,/i.test(l));
 
   if (lines.length > 300) {
     redirect("/staff?error=" + encodeURIComponent("Import at most 300 rows at a time."));
@@ -71,7 +82,11 @@ export async function bulkImportStaff(formData: FormData) {
 
   for (const line of lines) {
     const c = line.split(",").map((x) => x.trim().replace(/^"|"$/g, ""));
-    const [staffId, firstName, surname, email, deptName, rank, employmentType, appointed, officeName] = c;
+    const [
+      title, firstName, middleName, surname, sex, dob, lga, state,
+      rank, gradeLevel, dofa, dopa, retirement, phone, deptName, officeName,
+    ] = c;
+
     const label = [firstName, surname].filter(Boolean).join(" ") || line.slice(0, 40);
 
     if (!firstName || !surname) {
@@ -79,46 +94,44 @@ export async function bulkImportStaff(formData: FormData) {
       continue;
     }
 
-    const department = findDepartment(deptName ?? "");
+    const department = loose(departments, deptName ?? "");
     if (deptName && !department) {
       results.push({ label, ok: false, detail: `No department matching "${deptName}".` });
       continue;
     }
-
-    const office = findOffice(officeName ?? "");
+    const office = loose(offices, officeName ?? "");
     if (officeName && !office) {
       results.push({ label, ok: false, detail: `No office matching "${officeName}".` });
       continue;
     }
 
-    if (!department && !office) {
-      results.push({
-        label,
-        ok: false,
-        detail: "Give either a department or an office — a record with neither can't have leave approved.",
-      });
-      continue;
-    }
+    const level = Number(String(gradeLevel ?? "").replace(/\D/g, ""));
 
     const { error } = await supabase.from("staff").insert({
-      staff_id_number: staffId || null,
+      title: title || null,
       first_name: firstName,
+      middle_name: middleName || null,
       surname,
-      email: email ? email.toLowerCase() : null,
+      gender: parseGender(sex),
+      date_of_birth: parseDate(dob),
+      lga: lga || null,
+      state_of_origin: state || null,
+      rank: rank || null,
+      grade_level: Number.isFinite(level) && level > 0 ? level : null,
+      appointment_date: parseDate(dofa),
+      present_appointment_date: parseDate(dopa),
+      retirement_date: parseDate(retirement),
+      phone: phone || null,
       department_id: department?.id ?? null,
       school_id: department?.school_id ?? null,
       office_id: office?.id ?? null,
-      rank: rank || null,
-      employment_type: employmentType || null,
-      appointment_date: appointed || null,
+      employment_type: null,
       created_by: user?.id,
     });
 
     results.push(
       error
-        ? { label, ok: false, detail: error.message.includes("duplicate")
-            ? "A staff record with that ID already exists."
-            : error.message }
+        ? { label, ok: false, detail: error.message }
         : { label, ok: true, detail: "added" }
     );
   }

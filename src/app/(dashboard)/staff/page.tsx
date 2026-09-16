@@ -28,6 +28,14 @@ export default async function StaffDirectoryPage({
         </div>
         {canEdit && (
           <Link
+            href="/staff/assignments"
+            className="rounded-sm border border-[var(--color-green-deep)]/40 px-4 py-2 text-sm font-medium text-[var(--color-green-deep)] hover:bg-[var(--color-green-deep)]/5"
+          >
+            Assignments
+          </Link>
+        )}
+        {canEdit && (
+          <Link
             href="/staff/new"
             className="flex items-center gap-2 rounded-sm bg-[var(--color-green-deep)] px-4 py-2 text-sm font-medium text-[var(--color-paper)] hover:bg-[var(--color-green-mid)]"
           >
@@ -57,17 +65,18 @@ export default async function StaffDirectoryPage({
             <p className="text-sm text-[var(--color-ink-soft)]">
               One person per line:{" "}
               <span className="font-mono text-xs">
-                staff id,first name,surname,email,department,rank,employment type,appointment date,office
+                title,first name,middle name,surname,sex,date of birth,LGA,state,designation,grade level,DOFA,DOPA,retirement date,phone,department,office
               </span>
-              . Every row needs a name and either a department (academic staff) or an office
-              (administrative staff) in the last column. Dates as YYYY-MM-DD. A header row is
-              ignored. Up to 300 rows at a time.
+              . This is the column order of the printed nominal roll, so a row can be typed
+              straight across. Only first name and surname are required — leave the rest blank but
+              keep the commas. Dates may be written DD/MM/YYYY. Department and office can be left
+              empty and filled in afterwards on the Assignments screen. Up to 300 rows at a time.
             </p>
             <textarea
               name="csv"
               rows={10}
               required
-              placeholder={"CAILS/001,Musa,Ibrahim,musa@kwaracails.edu.ng,English,Senior Lecturer,academic,2015-03-01,\nCAILS/002,Aisha,Bello,,,Administrative Officer I,non_academic,2019-09-15,Registrar"}
+              placeholder={"Mrs,Khadijat,K,Ibrahim Eletu,F,11/11/1968,Ilorin West,Kwara,Chief Lecturer,15,01/01/1998,01/09/2014,11/11/2033,08033947632,,\nMr,Ibrahim,,Jimoh Akoro,M,06/06/1984,Ilorin East,Kwara,Craftman,3,01/02/2019,01/01/2023,06/06/2044,08163483336,,"}
               className="w-full rounded-sm border border-[var(--color-line)] bg-white px-3 py-2 font-mono text-xs"
             />
             <p className="text-xs text-[var(--color-ink-soft)]">
