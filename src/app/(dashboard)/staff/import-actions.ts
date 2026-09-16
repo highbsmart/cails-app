@@ -52,15 +52,27 @@ export async function bulkImportStaff(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [{ data: departments }, { data: offices }] = await Promise.all([
+  const [{ data: departmentRows }, { data: officeRows }] = await Promise.all([
     supabase.from("departments").select("id, name, school_id").eq("is_active", true),
     supabase.from("offices").select("id, name").eq("is_active", true),
   ]);
 
-  const loose = (list: { id: string; name: string }[] | null, typed: string) => {
+  // The client is untyped, so these come back as any. Name the shapes here or
+  // the matcher below has nothing to infer from and loses school_id.
+  type Dept = { id: string; name: string; school_id: string | null };
+  type Office = { id: string; name: string };
+  const departments = (departmentRows ?? []) as Dept[];
+  const offices = (officeRows ?? []) as Office[];
+
+  // Generic so the matched row keeps its own shape — a department carries
+  // school_id, an office does not, and the caller needs to see the difference.
+  const loose = <T extends { id: string; name: string }>(
+    list: T[],
+    typed: string
+  ): T | null => {
     if (!typed) return null;
     const needle = typed.trim().toLowerCase().replace(/^department of\s+/, "");
-    const l = list ?? [];
+    const l = list;
     return (
       l.find((x) => x.name.toLowerCase().replace(/^department of\s+/, "") === needle) ??
       l.find((x) => x.name.toLowerCase().includes(needle)) ??
