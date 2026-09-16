@@ -24,6 +24,13 @@ export type StaffProfile = StaffListRow & {
   confirmation_date: string | null;
   next_of_kin_name: string | null;
   next_of_kin_phone: string | null;
+  grade_level: number | null;
+  present_appointment_date: string | null;
+  retirement_date: string | null;
+  lga: string | null;
+  state_of_origin: string | null;
+  qualifications: string | null;
+  office: { id: string; name: string } | null;
 };
 
 /**
@@ -61,7 +68,7 @@ export async function getStaffById(id: string): Promise<StaffProfile | null> {
   const { data, error } = await supabase
     .from("staff")
     .select(
-      "id, staff_id_number, title, first_name, middle_name, surname, gender, date_of_birth, phone, email, address, rank, employment_type, status, appointment_date, confirmation_date, next_of_kin_name, next_of_kin_phone, department:departments(id, name), school:schools(id, name)"
+      "id, staff_id_number, title, first_name, middle_name, surname, gender, date_of_birth, phone, email, address, rank, employment_type, status, appointment_date, confirmation_date, next_of_kin_name, next_of_kin_phone, grade_level, present_appointment_date, retirement_date, lga, state_of_origin, qualifications, department:departments(id, name), school:schools(id, name), office:offices(id, name)"
     )
     .eq("id", id)
     .is("deleted_at", null)

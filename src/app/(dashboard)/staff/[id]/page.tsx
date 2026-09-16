@@ -5,6 +5,7 @@ import { getStaffById, getPostingHistory, currentUserCan, listDepartments } from
 import { getTrainingHistory, listAppraisalCriteria, getAppraisals, getPromotionHistory } from "@/lib/career";
 import { ProfileTabs } from "@/components/ProfileTabs";
 import { DocumentPanel } from "@/components/DocumentPanel";
+import { StaffEditForm } from "@/components/StaffEditForm";
 import { listDocumentsFor } from "@/lib/documents";
 import { listQualifications, getStaffLeaveHistory, getAuditTrail } from "@/lib/hr";
 import { listAllOffices } from "@/lib/messages";
@@ -28,11 +29,15 @@ export default async function StaffProfilePage({
     appraisalError?: string;
     docError?: string;
     qualError?: string;
+    editError?: string;
+    editNotice?: string;
   }>;
 }) {
   const { id } = await params;
-  const { postError, trainingError, promotionError, appraisalError, docError, qualError } =
-    await searchParams;
+  const {
+    postError, trainingError, promotionError, appraisalError, docError, qualError,
+    editError, editNotice,
+  } = await searchParams;
   const [staff, postings, canEdit, departments, training, criteria, appraisals, promotions, offices] =
     await Promise.all([
       getStaffById(id),
@@ -85,6 +90,16 @@ export default async function StaffProfilePage({
 
       <ProfileTabs
         tabs={[
+          ...(canEdit
+            ? [
+                {
+                  label: "Edit",
+                  content: (
+                    <StaffEditForm staff={staff} error={editError} notice={editNotice} />
+                  ),
+                },
+              ]
+            : []),
           {
             label: "Personal",
             content: (
