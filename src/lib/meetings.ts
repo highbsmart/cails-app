@@ -117,3 +117,22 @@ export function formatMeetingDate(iso: string): string {
     timeStyle: "short",
   });
 }
+
+export type StaffPickerOption = {
+  staff_id: string;
+  display_name: string;
+  office_name: string | null;
+  department_name: string | null;
+};
+
+/**
+ * Names for a picker, not the staff directory. Returns who someone is and
+ * where they sit — nothing else — so a convener can address an invitation
+ * without being able to open anyone's record.
+ */
+export async function listStaffForPicker(): Promise<StaffPickerOption[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("lookup_staff", { p_query: null });
+  if (error) return [];
+  return (data ?? []) as unknown as StaffPickerOption[];
+}

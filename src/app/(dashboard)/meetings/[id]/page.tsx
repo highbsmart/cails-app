@@ -7,6 +7,7 @@ import {
   getAgenda,
   getAttendance,
   listStaffOptions,
+  listStaffForPicker,
   formatMeetingDate,
   MEETING_TYPES,
   MEETING_STATUSES,
@@ -33,6 +34,7 @@ import {
   advanceMinutes,
   inviteOfficeHeads,
   inviteByEmail,
+  inviteStaffMember,
 } from "../actions";
 
 const input =
@@ -64,7 +66,8 @@ export default async function MeetingPage({
   const { id } = await params;
   const { error, docError } = await searchParams;
 
-  const [meeting, agenda, attendance, staff, offices, documents, canManage] = await Promise.all([
+  const [meeting, agenda, attendance, staff, offices, documents, canManage, pickerStaff] =
+    await Promise.all([
     getMeeting(id),
     getAgenda(id),
     getAttendance(id),
@@ -72,6 +75,7 @@ export default async function MeetingPage({
     listAllOffices(),
     listDocumentsFor("meeting", id),
     currentUserCan("MANAGE_MEETINGS"),
+    listStaffForPicker(),
   ]);
 
   if (!meeting) notFound();
@@ -302,16 +306,24 @@ export default async function MeetingPage({
                       </button>
                     </form>
 
-                    <form action={inviteByEmail} className="flex flex-wrap items-end gap-2">
+                    <form action={inviteStaffMember} className="flex flex-wrap items-end gap-2">
                       <input type="hidden" name="meeting_id" value={meeting.id} />
-                      <LabeledField label="Invite by email" className="min-w-48 flex-1">
-                        <input
-                          name="email"
-                          type="email"
-                          required
-                          placeholder="their email address"
-                          className={`${input} w-full`}
-                        />
+                      <LabeledField label="Invite a named person" className="min-w-56 flex-1">
+                        <select name="staff_id" required defaultValue="" className={`${input} w-full`}>
+                          <option value="" disabled>
+                            Search the staff list…
+                          </option>
+                          {pickerStaff.map((s) => (
+                            <option key={s.staff_id} value={s.staff_id}>
+                              {s.display_name}
+                              {s.office_name
+                                ? ` — ${s.office_name}`
+                                : s.department_name
+                                  ? ` — ${s.department_name}`
+                                  : ""}
+                            </option>
+                          ))}
+                        </select>
                       </LabeledField>
                       <LabeledField label="Attending as">
                         <select name="attendee_role" defaultValue="member" className={`${input} w-36`}>
@@ -326,6 +338,30 @@ export default async function MeetingPage({
                         Invite person
                       </button>
                     </form>
+
+                    <details>
+                      <summary className="cursor-pointer text-xs text-[var(--color-ink-soft)]">
+                        Not on the list? Invite by email address
+                      </summary>
+                      <form action={inviteByEmail} className="mt-2 flex flex-wrap items-end gap-2">
+                        <input type="hidden" name="meeting_id" value={meeting.id} />
+                        <LabeledField label="Email address" className="min-w-48 flex-1">
+                          <input name="email" type="email" required className={`${input} w-full`} />
+                        </LabeledField>
+                        <LabeledField label="Attending as">
+                          <select name="attendee_role" defaultValue="member" className={`${input} w-36`}>
+                            {ATTENDEE_ROLES.map((r) => (
+                              <option key={r} value={r}>
+                                {r}
+                              </option>
+                            ))}
+                          </select>
+                        </LabeledField>
+                        <button type="submit" className={saveBtn}>
+                          Invite
+                        </button>
+                      </form>
+                    </details>
                   </div>
                 )}
 

@@ -192,3 +192,61 @@ export async function notifyLeaveActioned(leaveId: string, action: string): Prom
     // As above.
   }
 }
+
+/**
+ * Tells invitees a meeting has been called. Sent one message per person so
+ * nobody sees the rest of the invitation list in a To: line — who else was
+ * called to a meeting is not necessarily their business.
+ */
+export async function notifyMeetingInvite(
+  meetingId: string,
+  staffIds: string[],
+  attendeeRole = "member"
+): Promise<void> {
+  try {
+    if (staffIds.length === 0) return;
+    const admin = createAdminClient();
+
+    const { data: meeting } = await admin
+      .from("meetings")
+      .select("title, scheduled_at, venue, office:offices(name)")
+      .eq("id", meetingId)
+      .maybeSingle();
+    if (!meeting) return;
+
+    const m = meeting as unknown as {
+      title: string;
+      scheduled_at: string;
+      venue: string | null;
+      office: { name: string } | null;
+    };
+
+    const when = new Date(m.scheduled_at).toLocaleString(undefined, {
+      dateStyle: "full",
+      timeStyle: "short",
+    });
+
+    for (const staffId of staffIds) {
+      const { data: email } = await admin.rpc("email_for_staff", { p_staff_id: staffId });
+      if (typeof email !== "string" || !email) continue;
+
+      await sendEmail({
+        to: [email],
+        subject: `Meeting invitation — ${m.title}`,
+        body: `
+          <p>You are invited to attend the following meeting${
+            attendeeRole !== "member" ? ` as <strong>${attendeeRole}</strong>` : ""
+          }.</p>
+          <p>
+            <strong>${m.title}</strong><br/>
+            ${when}<br/>
+            ${m.venue ? `${m.venue}<br/>` : ""}
+            ${m.office ? `Convened by ${m.office.name}` : ""}
+          </p>
+          <p>The agenda and papers are on the portal.</p>`,
+      });
+    }
+  } catch {
+    // An invitation that fails to email is still a recorded invitation.
+  }
+}

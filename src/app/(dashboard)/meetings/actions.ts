@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { notifyMeetingInvite } from "@/lib/notify";
 
 const str = (fd: FormData, key: string) => String(fd.get(key) ?? "").trim();
 const nullable = (fd: FormData, key: string) => str(fd, key) || null;
@@ -259,24 +260,71 @@ export async function advanceMinutes(formData: FormData) {
  * Invites every head of an office in one go — the usual case for a board or
  * committee, where the invitation is to the post rather than the person.
  */
+/** Who is already on the register, so we only notify people newly added. */
+async function attendeeStaffIds(meetingId: string): Promise<string[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("meeting_attendance")
+    .select("staff_id")
+    .eq("meeting_id", meetingId);
+  return ((data ?? []) as { staff_id: string | null }[])
+    .map((r) => r.staff_id)
+    .filter((id): id is string => Boolean(id));
+}
+
 export async function inviteOfficeHeads(formData: FormData) {
   const supabase = await createClient();
   const meetingId = str(formData, "meeting_id");
   const officeId = str(formData, "office_id");
+  const status = str(formData, "status") || "invited";
   if (!officeId) fail(`/meetings/${meetingId}`, "Choose an office to invite.");
+
+  const before = await attendeeStaffIds(meetingId);
 
   const { data, error } = await supabase.rpc("invite_office_heads", {
     p_meeting_id: meetingId,
     p_office_id: officeId,
-    p_status: str(formData, "status") || "invited",
+    p_status: status,
   });
 
   if (error) fail(`/meetings/${meetingId}`, explain(error.message));
-  if (!data || Number(data) === 0) {
+  // The function returns the rows it inserted, so an empty result means the
+  // office has no head assigned or they were already on the register.
+  if (!Array.isArray(data) || data.length === 0) {
     fail(
       `/meetings/${meetingId}`,
       "Nobody was added — that office has no head assigned, or they were already on the list. Assign an office-scoped role to its head first."
     );
+  }
+
+  // Someone marked "not required" is not told they have been stood down from a
+  // meeting they never knew about.
+  if (status === "invited") {
+    const after = await attendeeStaffIds(meetingId);
+    await notifyMeetingInvite(meetingId, after.filter((id) => !before.includes(id)));
+  }
+  back(meetingId);
+}
+
+/** Invites a named person chosen from the picker. */
+export async function inviteStaffMember(formData: FormData) {
+  const supabase = await createClient();
+  const meetingId = str(formData, "meeting_id");
+  const staffId = str(formData, "staff_id");
+  const attendeeRole = str(formData, "attendee_role") || "member";
+  const status = str(formData, "status") || "invited";
+  if (!staffId) fail(`/meetings/${meetingId}`, "Choose the person to invite.");
+
+  const { error } = await supabase.rpc("invite_staff_by_id", {
+    p_meeting_id: meetingId,
+    p_staff_id: staffId,
+    p_attendee_role: attendeeRole,
+    p_status: status,
+  });
+
+  if (error) fail(`/meetings/${meetingId}`, explain(error.message));
+  if (status === "invited") {
+    await notifyMeetingInvite(meetingId, [staffId], attendeeRole);
   }
   back(meetingId);
 }
@@ -292,13 +340,17 @@ export async function inviteByEmail(formData: FormData) {
   const email = str(formData, "email");
   if (!email) fail(`/meetings/${meetingId}`, "Enter the person's email address.");
 
-  const { error } = await supabase.rpc("invite_staff_by_email", {
+  const attendeeRole = str(formData, "attendee_role") || "member";
+  const { data: staffId, error } = await supabase.rpc("invite_staff_by_email", {
     p_meeting_id: meetingId,
     p_email: email,
-    p_attendee_role: str(formData, "attendee_role") || "member",
+    p_attendee_role: attendeeRole,
     p_status: str(formData, "status") || "invited",
   });
 
   if (error) fail(`/meetings/${meetingId}`, explain(error.message));
+  if (typeof staffId === "string") {
+    await notifyMeetingInvite(meetingId, [staffId], attendeeRole);
+  }
   back(meetingId);
 }
