@@ -87,6 +87,11 @@ export async function getRegistrations(studentId: string): Promise<RegistrationR
   return (data ?? []) as unknown as RegistrationRow[];
 }
 
+/**
+ * All results for a student, whatever their stage — this is the staff view.
+ * A student reading their own record sees only those with status 'locked',
+ * enforced by row-level security rather than by this query.
+ */
 export async function getStudentResults(studentId: string): Promise<StudentResultRow[]> {
   const supabase = await createClient();
   const { data, error } = await supabase

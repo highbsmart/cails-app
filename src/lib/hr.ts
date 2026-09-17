@@ -190,3 +190,46 @@ export async function getSupervisedStaff(): Promise<SupervisedStaff[]> {
 
   return (data ?? []) as unknown as SupervisedStaff[];
 }
+
+export type OwnRecord = {
+  id: string;
+  title: string | null;
+  first_name: string;
+  surname: string;
+  staff_id_number: string | null;
+  rank: string | null;
+  grade_level: number | null;
+  employment_type: string | null;
+  appointment_date: string | null;
+  present_appointment_date: string | null;
+  retirement_date: string | null;
+  qualifications: string | null;
+  status: string;
+  department: { name: string } | null;
+  office: { name: string } | null;
+};
+
+/**
+ * The signed-in user's own staff record. Visible to them under the
+ * staff_select_self policy regardless of whether they can see anyone else's,
+ * so every officer can check what the college holds about them.
+ */
+export async function getOwnStaffRecord(): Promise<OwnRecord | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data, error } = await supabase
+    .from("staff")
+    .select(
+      "id, title, first_name, surname, staff_id_number, rank, grade_level, employment_type, appointment_date, present_appointment_date, retirement_date, qualifications, status, department:departments(name), office:offices(name)"
+    )
+    .eq("user_id", user.id)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (error) return null;
+  return (data as unknown as OwnRecord) ?? null;
+}

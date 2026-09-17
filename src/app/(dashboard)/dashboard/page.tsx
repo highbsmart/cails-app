@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShieldAlert, Building2, Users2, GraduationCap, CalendarDays } from "lucide-react";
+import { ShieldAlert, Building2, Users2, GraduationCap, CalendarDays, IdCard } from "lucide-react";
 import { getCurrentUserContext } from "@/lib/auth";
 import { getDashboard } from "@/lib/dashboard";
 import { formatMeetingDate } from "@/lib/meetings";
@@ -43,6 +43,50 @@ export default async function DashboardPage() {
             : " — nothing awaiting you"}
         </p>
       </div>
+
+      {/*
+        The officer's own record from the nominal roll. Shown to everyone who
+        has one, so each principal officer sees their own post, grade and dates
+        rather than a generic greeting — and can spot a transcription error in
+        their own file.
+      */}
+      {d.ownRecord && (
+        <div className="rounded-sm border border-[var(--color-line)] bg-white/60 p-4">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <h2 className="flex items-center gap-2 font-serif text-sm text-[var(--color-green-deep)]">
+              <IdCard className="h-4 w-4 text-[var(--color-brass)]" strokeWidth={1.75} />
+              Your record
+            </h2>
+            <Link
+              href={`/staff/${d.ownRecord.id}`}
+              className="text-xs text-[var(--color-ink-soft)] hover:underline"
+            >
+              Open full record
+            </Link>
+          </div>
+
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-3">
+            <Detail label="Designation" value={d.ownRecord.rank} />
+            <Detail
+              label="Grade level"
+              value={d.ownRecord.grade_level ? `CONPCASS ${d.ownRecord.grade_level}` : null}
+            />
+            <Detail
+              label="Posted to"
+              value={d.ownRecord.office?.name ?? d.ownRecord.department?.name ?? "Not yet assigned"}
+            />
+            <Detail label="First appointed" value={d.ownRecord.appointment_date} />
+            <Detail label="Present appointment" value={d.ownRecord.present_appointment_date} />
+            <Detail label="Retirement" value={d.ownRecord.retirement_date} />
+          </dl>
+
+          {d.ownRecord.qualifications && (
+            <p className="mt-3 border-t border-[var(--color-line)] pt-2 text-xs text-[var(--color-ink-soft)]">
+              {d.ownRecord.qualifications}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* What this person has to act on. Panels only appear when they hold something. */}
       {(d.leaveToApprove.length > 0 ||
@@ -193,6 +237,15 @@ export default async function DashboardPage() {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function Detail({ label, value }: { label: string; value: string | null }) {
+  return (
+    <div>
+      <dt className="text-xs text-[var(--color-ink-soft)]">{label}</dt>
+      <dd>{value ?? "—"}</dd>
     </div>
   );
 }

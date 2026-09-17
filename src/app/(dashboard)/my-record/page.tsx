@@ -93,8 +93,8 @@ export default async function MyRecordPage() {
         {results.length === 0 ? (
           <div className="rounded-sm border border-[var(--color-line)] bg-white/50 p-3">
             <p className="text-sm text-[var(--color-ink-soft)]">
-              No results have been released yet. Scores appear here only once they have been
-              approved through the full examination process.
+              No results have been released yet. A score appears here only once it has cleared the
+              full examination process and been locked — until then it is still under review.
             </p>
           </div>
         ) : (
