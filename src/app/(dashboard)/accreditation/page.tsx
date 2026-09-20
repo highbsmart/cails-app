@@ -82,7 +82,12 @@ export default async function AccreditationPage({
                 <div key={e.id} className="rounded-sm border border-[var(--color-line)] bg-white/50 p-4">
                   <div className="mb-1 flex flex-wrap items-start justify-between gap-2">
                     <div>
-                      <p className="font-medium text-[var(--color-ink)]">{e.title}</p>
+                      <Link
+                        href={`/accreditation/${e.id}`}
+                        className="font-medium text-[var(--color-green-deep)] hover:underline"
+                      >
+                        {e.title}
+                      </Link>
                       <p className="text-xs text-[var(--color-ink-soft)]">{category?.name}</p>
                     </div>
                     <span className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${STATUS_STYLES[e.status]}`}>

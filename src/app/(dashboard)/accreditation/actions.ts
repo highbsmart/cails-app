@@ -29,8 +29,10 @@ export async function addEvidence(formData: FormData) {
 
 export async function updateEvidenceStatus(formData: FormData) {
   const supabase = await createClient();
-  const id = String(formData.get("id") ?? "");
+  // Called from the vault list (id) and from an evidence page (evidence_id).
+  const id = String(formData.get("id") ?? formData.get("evidence_id") ?? "");
   const status = String(formData.get("status") ?? "");
+  const back = formData.get("evidence_id") ? `/accreditation/${id}` : "/accreditation";
 
   const { error } = await supabase
     .from("accreditation_evidence")
@@ -38,9 +40,15 @@ export async function updateEvidenceStatus(formData: FormData) {
     .eq("id", id);
 
   if (error) {
-    redirect("/accreditation?error=" + encodeURIComponent(error.message));
+    redirect(`${back}?error=` + encodeURIComponent(error.message));
   }
 
   revalidatePath("/accreditation");
-  redirect("/accreditation");
+  revalidatePath(`/accreditation/${id}`);
+  redirect(back);
+}
+
+/** Alias used by the evidence page, so its form reads plainly. */
+export async function setEvidenceStatus(formData: FormData) {
+  return updateEvidenceStatus(formData);
 }

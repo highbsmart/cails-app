@@ -52,3 +52,16 @@ export function computeReadiness(categories: Category[], evidence: EvidenceItem[
 
   return { overall, byCategory };
 }
+
+export async function getEvidence(id: string): Promise<(EvidenceItem & {
+  category: { name: string } | null;
+}) | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("accreditation_evidence")
+    .select("id, title, description, reference_url, status, category_id, created_at, category:accreditation_categories(name)")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as unknown as EvidenceItem & { category: { name: string } | null }) ?? null;
+}
